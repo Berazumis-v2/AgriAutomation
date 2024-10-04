@@ -1,4 +1,4 @@
-package org.STPP.AgriAutomation.api.model;
+package org.STPP.AgriAutomation.Data.Entities;
 
 public class Plant {
 
