@@ -1,9 +1,9 @@
-package org.STPP.AgriAutomation.api.contoller;
+package org.STPP.AgriAutomation.api.contollers;
 
 import java.util.List;
 
-import org.STPP.AgriAutomation.Data.Entities.Plant;
-import org.STPP.AgriAutomation.service.PlantService;
+import org.STPP.AgriAutomation.api.services.PlantService;
+import org.STPP.AgriAutomation.data.models.Plant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/plants")
 public class PlantController {
-    private PlantService plantService;
+    private final PlantService plantService;
 
     @Autowired 
     public PlantController(PlantService plantService) {

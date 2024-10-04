@@ -1,0 +1,321 @@
+openapi: 3.0.0
+info:
+  title: AgriAutomation API
+  description: API for AgriAutomation
+  version: 1.0.0
+
+servers:
+  - url: localhost:8080
+    description: Local server
+
+paths:
+  /plantCareSystems:
+    get:
+      summary: Get a list of plant care systems
+      tags:
+        - plant care system
+      operationId: getAll
+      responses:
+        "200":
+          description: A list of plant care systems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/plantCareSystem"
+              example:
+                - id: 1
+                  name: "System 1"
+                - id: 2
+                  name: "System 2"
+    post:
+      description: "Create a plant care system"
+      tags:
+        - plant care system
+      operationId: createPlant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createPlantCareSystem"
+            example:
+              - name: "System 1"
+      responses:
+        "201":
+          $ref: "#/components/responses/singlePlantCareSystem"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "422":
+          $ref: "#/components/responses/unprocessableEntity"
+
+  /plantCareSystems/{plantCareSystemId}:
+    parameters:
+      - $ref: '#/components/parameters/plantCareSystemId'
+    get:
+      summary: Get a plant care system by ID
+      tags:
+        - plant care system
+      operationId: getPlantCareSystem
+      responses:
+        "200":
+          $ref: "#/components/responses/singlePlantCareSystem"
+        "404":
+          $ref: "#/components/responses/notFound"
+    put:
+      summary: Update a plant care system by ID
+      tags:
+        - plant care system
+      operationId: updatePlantCareSystem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updatePlantCareSystem"
+            example:
+              - name: "System 3"
+      responses:
+        "200":
+          $ref: "#/components/responses/singlePlantCareSystem"
+        "400":
+          $ref: "#/components/responses/badRequest"
+        "404":
+          $ref: "#/components/responses/notFound"
+        "422":
+          $ref: "#/components/responses/unprocessableEntity"
+    delete:
+      summary: Delete a plant care system by ID
+      tags:
+        - plant care system
+      operationId: deletePlantCareSystem
+      responses:
+        "404":
+          $ref: "#/components/responses/notFound"
+        "204":
+          description: Plant care system deleted
+  /plantCareSystems/{plantCareSystemId}/sensors:
+    parameters:
+      - $ref: '#/components/parameters/plantCareSystemId'
+    get:
+      summary: Get sensors for a plant care system
+      tags:
+        - sensor
+      operationId: getSensors
+      responses:
+        "200":
+          description: List of sensors
+    post:
+      description: 'Add a sensor'
+      tags:
+        - sensor
+      operationId: createSensor
+      responses:
+        '201':
+          description: OK
+  /plantCareSystems/{plantCareSystemId}/sensors/{sensorId}:
+    parameters:
+      - $ref: '#/components/parameters/plantCareSystemId'
+      - $ref: '#/components/parameters/sensorId'
+    get:
+      summary: Get a specific post for a plant
+      tags:
+        - sensor
+      operationId: getPost
+      responses:
+        "200":
+          description: A single sensor
+    put:
+      summary: Update a sensor for a plant care system
+      tags:
+        - sensor
+      operationId: updateSensor
+      responses:
+        "200":
+          description: Updated sensor
+    delete:
+      summary: Delete a sensor for a plant care system
+      tags:
+        - sensor
+      operationId: deleteSensor
+      responses:
+        "204":
+          description: Sensor deleted
+  /plantCareSystems/{plantCareSystemId}/sensors/{sensorId}/plants:
+    parameters:
+      - $ref: '#/components/parameters/plantCareSystemId'
+      - $ref: '#/components/parameters/sensorId'
+    get:
+      summary: Get plants for a specific sensor
+      tags:
+        - plant
+      operationId: getPlants
+      responses:
+        "200":
+          description: List of plants
+    post:
+      description: "Add a plant for a specific sensor"
+      tags:
+        - plant
+      operationId: createPlant
+      responses:
+        "201":
+          description: OK
+  /plantCareSystems/{id}/sensors/{sensorId}/plants/{plantId}:
+    parameters:
+      - $ref: '#/components/parameters/plantCareSystemId'
+      - $ref: '#/components/parameters/sensorId'
+      - $ref: '#/components/parameters/plantId'
+    get:
+      summary: Get a specific plant
+      tags:
+        - plant
+      operationId: getPlant
+      responses:
+        "200":
+          description: A single plant
+    put:
+      summary: Update a plant
+      tags:
+        - plant
+      operationId: updatePlant
+      responses:
+        "200":
+          description: Updated plant
+    delete:
+      summary: Delete a plant
+      tags:
+        - plant
+      operationId: deletePlant
+      responses:
+        "204":
+          description: Plant deleted
+components:
+  schemas:
+    plantCareSystem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    createPlantCareSystem:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          minLength: 2
+          maxLength: 100
+          pattern: "^[a-zA-Z0-9_]+$"  # Only allows letters, numbers, and underscores
+          type: string
+    updatePlantCareSystem:
+      type: object
+      properties:
+        name:
+          type: string
+    sensor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    plant:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    problemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          description: A URI reference that identifies the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code applicable to this problem.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          format: uri
+          description: A URI reference that identifies the specific occurrence of the problem.
+        errors:
+          type: object
+          description: A map of detailed errors for every property ([property => error])
+  responses:
+    singlePlantCareSystem:
+      description: A plant care system
+      content:
+        application/json:
+          schema:
+            type: object
+            items:
+              $ref: "#/components/schemas/plantCareSystem"
+          example:
+            - id: 1
+              name: "System 1"
+    unprocessableEntity:
+      description: Unprocessable entity response
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            items:
+              $ref: "#/components/schemas/problemDetails"
+          example:
+            type: "https://tools.ietf.org/html/rfc4918#section-11.2"
+            title: "Unprocessable Entity"
+            status: 422
+            errors:
+              Name:
+                - "'Name' must not be empty."
+    badRequest:
+      description: Bad request response
+    notFound:
+      description: Resource was not found
+  parameters:
+    plantCareSystemId:
+      name: plantCareSystemId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: The unique identifier of the plant plant care system
+    sensorId:
+      name: sensorId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: The unique identifier of the sensor
+    plantId:
+      name: plantId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: The unique identifier of the plant
+  
+tags:
+  - name: plant
+    description: Operations related to plant care systems
+  - name: post
+    description: Operations related to sensors
+  - name: comment
+    description: Operations related to plants
+
+externalDocs:
+  description: Find more info here
+  url: https://example.com/docs

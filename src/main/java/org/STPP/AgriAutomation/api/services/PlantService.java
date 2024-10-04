@@ -1,10 +1,10 @@
-package org.STPP.AgriAutomation.service;
+package org.STPP.AgriAutomation.api.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.STPP.AgriAutomation.Data.Entities.Plant;
+import org.STPP.AgriAutomation.data.models.Plant;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PlantService {
 
-    private List<Plant> plantList;
+    private final List<Plant> plantList;
 
     public PlantService() {
         plantList = new ArrayList<>();
