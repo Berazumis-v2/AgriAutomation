@@ -117,10 +117,10 @@ paths:
       - $ref: '#/components/parameters/plantCareSystemId'
       - $ref: '#/components/parameters/sensorId'
     get:
-      summary: Get a specific post for a plant
+      summary: Get a specific sensor for a plant
       tags:
         - sensor
-      operationId: getPost
+      operationId: getSensor
       responses:
         "200":
           description: A single sensor
