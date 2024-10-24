@@ -1,15 +1,9 @@
 package org.STPP.AgriAutomation.data.entities;
 
+import java.sql.Timestamp;
 import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.*;
 
 @Entity
 public class Sensor {
@@ -18,23 +12,56 @@ public class Sensor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column
-    private String name;
+    private String model;
+    private int temparature;
+    private int humidity;
+    private Timestamp readingTimestamp;
+    private Timestamp calibrationTimestamp;
 
-    // Association with Plant
-    @ManyToMany
-    @JoinTable(
-        name = "sensor_plants",
-        joinColumns = @JoinColumn(name = "sensor_id"),
-        inverseJoinColumns = @JoinColumn(name = "plant_id")
-    )
-    private List<Plant> assignedPlants;
+
+    @ManyToOne
+    @JoinColumn(name = "plantCareSystem_id", nullable = false)
+    private PlantCareSystem plantCareSystem;
+
+    @OneToMany(mappedBy = "sensor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Plant> plants;
 
     public Sensor() {}
 
-    public Sensor(int id, String name, List<Plant> assignedPlants) {
-        this.id = id;
-        this.name = name;
-        this.assignedPlants = assignedPlants;
+    public Sensor(String model) {
+        this.model = model;
     }
+
+    public Sensor(String model, PlantCareSystem plantCareSystem) {
+        this.model = model;
+        this.plantCareSystem = plantCareSystem;
+    }
+
+    public int getId() {return id;}
+
+    public void setId(int id) {this.id = id;}
+
+    public String getModel() {return model;}
+
+    public void setModel(String model) {this.model = model;}
+
+    public int getTemparature() {return temparature;}
+
+    public void setTemparature(int temparature) {this.temparature = temparature;}
+
+    public int getHumidity() {return humidity;}
+
+    public void setHumidity(int humidity) {this.humidity = humidity;}
+
+    public PlantCareSystem getPlantCareSystem() {return plantCareSystem;}
+
+    public void setPlantCareSystem(PlantCareSystem plantCareSystem) {this.plantCareSystem = plantCareSystem;}
+
+    public Timestamp getReadingTimestamp() {return readingTimestamp;}
+
+    public void setReadingTimestamp(Timestamp readingTimestamp) {this.readingTimestamp = readingTimestamp;}
+
+    public Timestamp getCalibrationTimestamp() {return calibrationTimestamp;}
+
+    public void setCalibrationTimestamp(Timestamp calibrationTimestamp) {this.calibrationTimestamp = calibrationTimestamp;}
 }
