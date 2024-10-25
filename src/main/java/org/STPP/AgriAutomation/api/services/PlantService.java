@@ -1,53 +1,42 @@
 package org.STPP.AgriAutomation.api.services;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.STPP.AgriAutomation.data.models.Plant;
-import org.STPP.AgriAutomation.data.models.Sensor;
+import org.STPP.AgriAutomation.api.repositories.PlantRepository;
+import org.STPP.AgriAutomation.data.entities.Plant;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
+
 
 @Service
 public class PlantService {
 
-    private final AtomicInteger idGenerator = new AtomicInteger(5);
+    private final PlantRepository plantRepository;
 
-    public PlantService() {}
-
-    public Plant addPlant(Plant plant, Sensor sensor){
-        plant.setId(idGenerator.incrementAndGet());
-        plant.setSensor(sensor);
-        sensor.getAssignedPlants().add(plant);
-        return plant;
+    public PlantService(PlantRepository plantRepository) {
+        this.plantRepository = plantRepository;
     }
 
-    public Plant updatePlant(Plant updatedPlant) {
-        Plant existingPlant = updatedPlant.getSensor().getAssignedPlants().stream()
-                .filter(plant -> plant.getId() == updatedPlant.getId())
-                .findFirst()
-                .orElse(null);
-        
-        if (existingPlant != null) {
-            existingPlant.setName(updatedPlant.getName());
-        }
-        return existingPlant;
+    public Iterable<Plant> findAll() {
+        return plantRepository.findAll();
     }
 
-    public void removePlant(Plant plant) {
-        Sensor sensor = plant.getSensor();
-        if (sensor != null) {
-            sensor.getAssignedPlants().remove(plant);
-            plant.setSensor(null);
-        }
+    public Optional<Plant> findById(int id) {
+        return plantRepository.findById(id);
     }
 
-    public boolean plantExists(Sensor sensor, Integer plantId){
-        return sensor.getAssignedPlants().stream().anyMatch(plant -> plant.getId() == plantId);
+    public Iterable<Plant> findAllBySensorId(int sensorId) {
+        return plantRepository.findAllBySensorId(sensorId);
     }
 
-    public Plant getPlant(Sensor sensor, Integer plantId) {
-        return sensor.getAssignedPlants().stream()
-                .filter(plant -> plant.getId() == plantId)
-                .findFirst()
-                .orElse(null);
+    public Plant save(Plant plant) {
+        return plantRepository.save(plant);
     }
+
+    public void deleteById(int id) {
+        plantRepository.deleteById(id);
+    }
+
+    public boolean existsById(int id) {
+        return plantRepository.existsById(id);
+    }
+
 }

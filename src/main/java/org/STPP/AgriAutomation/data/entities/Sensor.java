@@ -13,7 +13,7 @@ public class Sensor {
     private int id;
 
     private String model;
-    private int temparature;
+    private int temperature;
     private int humidity;
     private Timestamp readingTimestamp;
     private Timestamp calibrationTimestamp;
@@ -45,10 +45,6 @@ public class Sensor {
 
     public void setModel(String model) {this.model = model;}
 
-    public int getTemparature() {return temparature;}
-
-    public void setTemparature(int temparature) {this.temparature = temparature;}
-
     public int getHumidity() {return humidity;}
 
     public void setHumidity(int humidity) {this.humidity = humidity;}
@@ -64,4 +60,8 @@ public class Sensor {
     public Timestamp getCalibrationTimestamp() {return calibrationTimestamp;}
 
     public void setCalibrationTimestamp(Timestamp calibrationTimestamp) {this.calibrationTimestamp = calibrationTimestamp;}
+
+    public int getTemperature() {return temperature;}
+
+    public void setTemperature(int temperature) {this.temperature = this.temperature;}
 }

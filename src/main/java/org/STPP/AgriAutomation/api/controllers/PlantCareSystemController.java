@@ -1,64 +1,97 @@
 package org.STPP.AgriAutomation.api.controllers;
 
-import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
 import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.STPP.AgriAutomation.data.dtos.PlantCareSystemRequestDTO;
+import org.STPP.AgriAutomation.data.dtos.PlantCareSystemResponseDTO;
+import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
+import org.STPP.AgriAutomation.data.dtos.PlantCareSystemConverter;
+import org.STPP.AgriAutomation.api.exceptions.ResourceNotFoundException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
+import jakarta.validation.Valid;
+import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
+import org.springframework.web.util.UriComponentsBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
-@RequestMapping("/api/plant-care-systems")
-@CrossOrigin(origins = "*")
+@RequestMapping("/plantcaresystems")
+@Validated
 public class PlantCareSystemController {
 
     private final PlantCareSystemService plantCareSystemService;
+    private final Logger logger = LoggerFactory.getLogger(PlantCareSystemController.class);
 
-    @Autowired
     public PlantCareSystemController(PlantCareSystemService plantCareSystemService) {
         this.plantCareSystemService = plantCareSystemService;
     }
 
     @GetMapping
-    public ResponseEntity<List<PlantCareSystem>> getAllPlantCareSystems() {
-        Iterable<PlantCareSystem> pcsIterable = plantCareSystemService.findAll();
-        List<PlantCareSystem> pcsList = (List<PlantCareSystem>) pcsIterable;
-        return ResponseEntity.ok(pcsList);
+    public ResponseEntity<List<PlantCareSystemResponseDTO>> findAll() {
+        logger.info("Finding all plant care systems");
+        List<PlantCareSystem> plantCareSystems = (List<PlantCareSystem>) plantCareSystemService.findAll();
+        List<PlantCareSystemResponseDTO> responseDTOs = PlantCareSystemConverter.convertToResponseDTOList(plantCareSystems);
+        return ResponseEntity.ok(responseDTOs);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PlantCareSystem> getPlantCareSystemById(@PathVariable int id) {
-        Optional<PlantCareSystem> pcsOpt = plantCareSystemService.findById(id);
-        return pcsOpt.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<PlantCareSystemResponseDTO> findById(@PathVariable int id) {
+        logger.info("Finding plant care system with id: {}", id);
+        PlantCareSystem plantCareSystem = plantCareSystemService.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + id + " not found"));
+
+        PlantCareSystemResponseDTO responseDTO = PlantCareSystemConverter.convertToResponseDTO(plantCareSystem);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @PostMapping
-    public ResponseEntity<PlantCareSystem> createPlantCareSystem(@RequestBody PlantCareSystem plantCareSystem) {
-        PlantCareSystem createdPcs = plantCareSystemService.save(plantCareSystem);
-        return ResponseEntity.ok(createdPcs);
+    public ResponseEntity<PlantCareSystemResponseDTO> create(
+            @Valid @RequestBody PlantCareSystemRequestDTO requestDTO,
+            UriComponentsBuilder uriBuilder) {
+        logger.info("Creating plant care system: {}", requestDTO);
+
+        PlantCareSystem plantCareSystem = PlantCareSystemConverter.convertToEntity(requestDTO);
+        PlantCareSystem savedPlantCareSystem = plantCareSystemService.save(plantCareSystem);
+
+        PlantCareSystemResponseDTO responseDTO = PlantCareSystemConverter.convertToResponseDTO(savedPlantCareSystem);
+
+        URI location = uriBuilder.path("/plantcaresystems/{id}").buildAndExpand(savedPlantCareSystem.getId()).toUri();
+        return ResponseEntity.created(location).body(responseDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PlantCareSystem> updatePlantCareSystem(
+    public ResponseEntity<PlantCareSystemResponseDTO> updateById(
             @PathVariable int id,
-            @RequestBody PlantCareSystem plantCareSystem) {
-        if (!plantCareSystemService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        plantCareSystem.setId(id);
-        PlantCareSystem updatedPcs = plantCareSystemService.save(plantCareSystem);
-        return ResponseEntity.ok(updatedPcs);
+            @Valid @RequestBody PlantCareSystemRequestDTO requestDTO) {
+        logger.info("Updating plant care system with id: {}", id);
+
+        PlantCareSystem existingPlantCareSystem = plantCareSystemService.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + id + " not found"));
+
+        // Update fields
+        existingPlantCareSystem.setName(requestDTO.getName());
+        existingPlantCareSystem.setDescription(requestDTO.getDescription());
+        existingPlantCareSystem.setAutomationEnabled(requestDTO.isAutomationEnabled());
+        existingPlantCareSystem.setMaintenanceTimeStamp(requestDTO.getMaintenanceTimeStamp());
+
+        PlantCareSystem updatedPlantCareSystem = plantCareSystemService.save(existingPlantCareSystem);
+
+        PlantCareSystemResponseDTO responseDTO = PlantCareSystemConverter.convertToResponseDTO(updatedPlantCareSystem);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePlantCareSystem(@PathVariable int id) {
+    public ResponseEntity<Void> deleteById(@PathVariable int id) {
+        logger.info("Deleting plant care system with id: {}", id);
         if (!plantCareSystemService.existsById(id)) {
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("PlantCareSystem with id " + id + " not found");
         }
+
         plantCareSystemService.deleteById(id);
         return ResponseEntity.noContent().build();
     }

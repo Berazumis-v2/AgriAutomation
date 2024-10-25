@@ -14,7 +14,7 @@ public class PlantCareSystem {
     private String name;
     private String description;
     private boolean automationEnabled;
-    private Timestamp MaintenanceTimeStamp;
+    private Timestamp maintenanceTimeStamp;
 
 
 
@@ -44,8 +44,8 @@ public class PlantCareSystem {
 
     public void setAutomationEnabled(boolean automationEnabled) {this.automationEnabled = automationEnabled;}
 
-    public Timestamp getMaintenanceTimeStamp() {return MaintenanceTimeStamp;}
+    public Timestamp getMaintenanceTimeStamp() {return maintenanceTimeStamp;}
 
-    public void setMaintenanceTimeStamp(Timestamp maintenanceTimeStamp) {this.MaintenanceTimeStamp = maintenanceTimeStamp;}
+    public void setMaintenanceTimeStamp(Timestamp maintenanceTimeStamp) {this.maintenanceTimeStamp = maintenanceTimeStamp;}
 
 }
