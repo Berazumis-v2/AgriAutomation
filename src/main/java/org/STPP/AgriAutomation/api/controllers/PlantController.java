@@ -32,7 +32,6 @@ public class PlantController {
     private final PlantService plantService;
     private final SensorService sensorService;
     private final PlantCareSystemService plantCareSystemService;
-    private final Logger logger = LoggerFactory.getLogger(PlantController.class);
 
     public PlantController(PlantService plantService, SensorService sensorService, PlantCareSystemService plantCareSystemService) {
         this.plantService = plantService;
@@ -42,8 +41,6 @@ public class PlantController {
 
     @GetMapping
     public ResponseEntity<List<PlantResponseDTO>> findAll(@PathVariable int plantcaresystemId, @PathVariable int sensorId) {
-        logger.info("Finding all plants for Sensor with id: {} and PlantCareSystem with id: {}", sensorId, plantcaresystemId);
-
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 

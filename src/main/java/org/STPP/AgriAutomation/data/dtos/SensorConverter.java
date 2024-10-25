@@ -32,8 +32,6 @@ public class SensorConverter {
         sensor.setModel(dto.getModel());
         sensor.setTemperature(dto.getTemperature());
         sensor.setHumidity(dto.getHumidity());
-        // Do not set readingTimestamp and calibrationTimestamp
-        // The PlantCareSystem association will be set in the controller or service layer
         return sensor;
     }
 }

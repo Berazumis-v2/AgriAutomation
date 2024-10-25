@@ -36,8 +36,6 @@ public class Sensor {
         this.plantCareSystem = plantCareSystem;
     }
 
-    // Getters and Setters
-
     public int getId() {
         return id;
     }

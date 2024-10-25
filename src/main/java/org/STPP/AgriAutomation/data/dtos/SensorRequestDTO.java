@@ -10,18 +10,13 @@ public class SensorRequestDTO {
     private int temperature;
     private int humidity;
 
-    private int plantCareSystemId;  // Assuming you refer to PlantCareSystem by its ID
-
     public SensorRequestDTO() {}
 
-    public SensorRequestDTO(String model, int temperature, int humidity, int plantCareSystemId) {
+    public SensorRequestDTO(String model, int temperature, int humidity) {
         this.model = model;
         this.temperature = temperature;
         this.humidity = humidity;
-        this.plantCareSystemId = plantCareSystemId;
     }
-
-    // Getters and Setters
 
     public String getModel() {
         return model;
@@ -45,13 +40,5 @@ public class SensorRequestDTO {
 
     public void setHumidity(int humidity) {
         this.humidity = humidity;
-    }
-
-    public int getPlantCareSystemId() {
-        return plantCareSystemId;
-    }
-
-    public void setPlantCareSystemId(int plantCareSystemId) {
-        this.plantCareSystemId = plantCareSystemId;
     }
 }

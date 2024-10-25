@@ -1,4 +1,3 @@
-// ErrorDetail.java
 package org.STPP.AgriAutomation.api.exceptions;
 
 public class ErrorDetail {
@@ -14,7 +13,6 @@ public class ErrorDetail {
         this.code = code;
     }
 
-    // Getters and Setters
     public String getResource() {
         return resource;
     }

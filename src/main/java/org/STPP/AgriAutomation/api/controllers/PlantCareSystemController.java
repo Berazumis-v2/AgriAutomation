@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 public class PlantCareSystemController {
 
     private final PlantCareSystemService plantCareSystemService;
-    private final Logger logger = LoggerFactory.getLogger(PlantCareSystemController.class);
 
     public PlantCareSystemController(PlantCareSystemService plantCareSystemService) {
         this.plantCareSystemService = plantCareSystemService;
@@ -33,7 +32,6 @@ public class PlantCareSystemController {
 
     @GetMapping
     public ResponseEntity<List<PlantCareSystemResponseDTO>> findAll() {
-        logger.info("Finding all plant care systems");
         List<PlantCareSystem> plantCareSystems = (List<PlantCareSystem>) plantCareSystemService.findAll();
         List<PlantCareSystemResponseDTO> responseDTOs = PlantCareSystemConverter.convertToResponseDTOList(plantCareSystems);
         return ResponseEntity.ok(responseDTOs);
@@ -41,7 +39,6 @@ public class PlantCareSystemController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PlantCareSystemResponseDTO> findById(@PathVariable int id) {
-        logger.info("Finding plant care system with id: {}", id);
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", id));
 
@@ -53,7 +50,6 @@ public class PlantCareSystemController {
     public ResponseEntity<PlantCareSystemResponseDTO> create(
             @Valid @RequestBody PlantCareSystemRequestDTO requestDTO,
             UriComponentsBuilder uriBuilder) {
-        logger.info("Creating plant care system: {}", requestDTO);
 
         PlantCareSystem plantCareSystem = PlantCareSystemConverter.convertToEntity(requestDTO);
         PlantCareSystem savedPlantCareSystem = plantCareSystemService.save(plantCareSystem);
@@ -68,12 +64,10 @@ public class PlantCareSystemController {
     public ResponseEntity<PlantCareSystemResponseDTO> updateById(
             @PathVariable int id,
             @Valid @RequestBody PlantCareSystemRequestDTO requestDTO) {
-        logger.info("Updating plant care system with id: {}", id);
 
         PlantCareSystem existingPlantCareSystem = plantCareSystemService.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", id));
 
-        // Update fields
         existingPlantCareSystem.setName(requestDTO.getName());
         existingPlantCareSystem.setDescription(requestDTO.getDescription());
         existingPlantCareSystem.setAutomationEnabled(requestDTO.isAutomationEnabled());
@@ -81,7 +75,6 @@ public class PlantCareSystemController {
         if (requestDTO.getMaintenanceTimeStamp() != null) {
             existingPlantCareSystem.setMaintenanceTimeStamp(requestDTO.getMaintenanceTimeStamp());
         }
-        // If maintenanceTimeStamp is not provided, retain the existing value
 
         PlantCareSystem updatedPlantCareSystem = plantCareSystemService.save(existingPlantCareSystem);
 
@@ -91,7 +84,6 @@ public class PlantCareSystemController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable int id) {
-        logger.info("Deleting plant care system with id: {}", id);
         if (!plantCareSystemService.existsById(id)) {
             throw new ResourceNotFoundException("PlantCareSystem", "id", id);
         }

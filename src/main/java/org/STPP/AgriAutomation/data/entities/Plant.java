@@ -19,7 +19,6 @@ public class Plant {
     @JoinColumn(name = "sensor_id", nullable = false)
     private Sensor sensor;
 
-    // Constructors, getters, and setters
     public Plant() {}
 
     public Plant(int id, String name) {

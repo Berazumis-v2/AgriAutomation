@@ -23,8 +23,6 @@ public class PlantCareSystemResponseDTO {
         this.maintenanceTimeStamp = maintenanceTimeStamp;
     }
 
-    // Getters and Setters
-
     public int getId() {
         return id;
     }

@@ -155,7 +155,6 @@ paths:
                   model: "SensorModelY"
                   temperature: 20
                   humidity: 50
-                  plantCareSystemId: 1
       responses:
         '201':
           description: Sensor created successfully
@@ -211,7 +210,6 @@ paths:
                   model: "UpdatedModelZ"
                   temperature: 23
                   humidity: 57
-                  plantCareSystemId: 1
       responses:
         '200':
           description: Updated sensor
@@ -397,11 +395,9 @@ components:
         humidity:
           type: integer
           description: Current humidity reading
-        plantCareSystemId:
-          type: integer
-          description: The unique identifier of the associated PlantCareSystem
-          example: 1
-      description: Request schema for creating or updating a Sensor
+      description: >
+        Request schema for creating or updating a Sensor.
+        The associated `plantCareSystemId` is provided via the URL path.
 
     SensorResponse:
       allOf:
@@ -422,6 +418,10 @@ components:
               format: date-time
               description: Last calibration timestamp
               example: "2024-04-01T12:00:00"
+            plantCareSystemId:
+              type: integer
+              description: The unique identifier of the associated PlantCareSystem
+              example: 1
           description: Response schema for Sensor including its ID and timestamps
 
     PlantRequest:

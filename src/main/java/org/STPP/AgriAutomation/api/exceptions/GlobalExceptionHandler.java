@@ -1,4 +1,3 @@
-// GlobalExceptionHandler.java
 package org.STPP.AgriAutomation.api.exceptions;
 
 import java.util.Arrays;

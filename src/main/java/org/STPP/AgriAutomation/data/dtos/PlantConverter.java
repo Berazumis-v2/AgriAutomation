@@ -28,7 +28,6 @@ public class PlantConverter {
         Plant plant = new Plant();
         plant.setName(dto.getName());
         plant.setGrowthStage(dto.getGrowthStage());
-        // The Sensor association will be set in the service layer
         return plant;
     }
 }

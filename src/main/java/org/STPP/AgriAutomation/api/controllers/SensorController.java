@@ -28,7 +28,6 @@ public class SensorController {
 
     private final SensorService sensorService;
     private final PlantCareSystemService plantCareSystemService;
-    private final Logger logger = LoggerFactory.getLogger(SensorController.class);
 
     public SensorController(SensorService sensorService, PlantCareSystemService plantCareSystemService) {
         this.sensorService = sensorService;
@@ -47,8 +46,6 @@ public class SensorController {
 
     @GetMapping("/{sensorId}")
     public ResponseEntity<SensorResponseDTO> findById(@PathVariable int plantcaresystemId, @PathVariable int sensorId) {
-        logger.info("Finding sensor with id: {} for PlantCareSystem with id: {}", sensorId, plantcaresystemId);
-
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 
@@ -68,7 +65,6 @@ public class SensorController {
             @PathVariable int plantcaresystemId,
             @Valid @RequestBody SensorRequestDTO requestDTO,
             UriComponentsBuilder uriBuilder) {
-        logger.info("Creating sensor for PlantCareSystem with id: {}", plantcaresystemId);
 
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
@@ -113,7 +109,6 @@ public class SensorController {
 
     @DeleteMapping("/{sensorId}")
     public ResponseEntity<Void> deleteById(@PathVariable int plantcaresystemId, @PathVariable int sensorId) {
-        logger.info("Deleting sensor with id: {} for PlantCareSystem with id: {}", sensorId, plantcaresystemId);
 
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));

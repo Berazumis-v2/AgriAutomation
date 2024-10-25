@@ -9,7 +9,7 @@ public class PlantRequestDTO {
 
     private String growthStage;
 
-    private int sensorId;  // Assuming we refer to Sensor by its ID
+    private int sensorId;
 
     public PlantRequestDTO() {}
 
@@ -18,8 +18,6 @@ public class PlantRequestDTO {
         this.growthStage = growthStage;
         this.sensorId = sensorId;
     }
-
-    // Getters and Setters
 
     public String getName() {
         return name;
