@@ -1,7 +1,9 @@
+// GlobalExceptionHandler.java
 package org.STPP.AgriAutomation.api.exceptions;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,79 +11,87 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.transaction.TransactionSystemException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
     Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", "Required request body is missing or unreadable");
+        ErrorDetail errorDetail = new ErrorDetail("Request", "body", "unreadable");
 
-        logger.info("Http message not readable error: {}", errors);
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Required request body is missing or unreadable",
+                Arrays.asList(errorDetail)
+        );
 
-        return ResponseEntity.badRequest().body(errors);
+        logger.info("Http message not readable error: {}", errorResponse);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleResourceNotFoundException(ResourceNotFoundException ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ErrorDetail errorDetail = new ErrorDetail(
+                ex.getResource(),
+                ex.getField(),
+                "not_found"
+        );
 
-        logger.info("Resource not found error: {}", errors);
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), Arrays.asList(errorDetail));
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errors);
+        logger.info("Resource not found error: {}", errorResponse);
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, String>> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-        Map<String, String> errors = new HashMap<>();
+    public ResponseEntity<ErrorResponse> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        String expectedType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown";
+        String errorMessage = String.format(
+                "Invalid value '%s' for parameter '%s'. Expected type is '%s'.",
+                ex.getValue(), ex.getName(), expectedType
+        );
 
-        if (ex.getRequiredType() == null) {
-            String errorMessage = String.format("Invalid value '%s' for parameter '%s'. Expected type is '%s'.",
-                    ex.getValue(), ex.getName(), "unknown");
-            errors.put(ex.getName(), errorMessage);
-        } else {
-            String errorMessage = String.format("Invalid value '%s' for parameter '%s'. Expected type is '%s'.",
-                    ex.getValue(), ex.getName(), ex.getRequiredType().getSimpleName());
-            errors.put(ex.getName(), errorMessage);
-        }
+        ErrorDetail errorDetail = new ErrorDetail("Parameter", ex.getName(), "type_mismatch");
 
-        logger.info("Type mismatch error: {}", errors);
+        ErrorResponse errorResponse = new ErrorResponse(errorMessage, Arrays.asList(errorDetail));
 
-        return ResponseEntity.badRequest().body(errors);
+        logger.info("Type mismatch error: {}", errorResponse);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        List<ErrorDetail> errorDetails = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> new ErrorDetail(
+                        error.getObjectName(), // resource
+                        error.getField(),      // field
+                        error.getCode()))      // code
+                .collect(Collectors.toList());
 
-        logger.info("Validation error: {}", errors);
+        ErrorResponse errorResponse = new ErrorResponse("Validation Failed", errorDetails);
 
-        return ResponseEntity.badRequest().body(errors);
+        logger.info("Validation error: {}", errorResponse);
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorResponse);
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(TransactionSystemException.class)
-    public ResponseEntity<Map<String, String>> handleTransactionSystemException(TransactionSystemException ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", "Invalid input");
+    public ResponseEntity<ErrorResponse> handleTransactionSystemException(TransactionSystemException ex) {
+        ErrorDetail errorDetail = new ErrorDetail("Transaction", "", "invalid_input");
 
-        logger.info("Transaction system error: {}", errors);
+        ErrorResponse errorResponse = new ErrorResponse("Invalid input", Arrays.asList(errorDetail));
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errors);
+        logger.info("Transaction system error: {}", errorResponse);
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

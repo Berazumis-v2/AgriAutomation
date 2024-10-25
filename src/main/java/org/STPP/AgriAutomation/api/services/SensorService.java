@@ -1,5 +1,6 @@
 package org.STPP.AgriAutomation.api.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.STPP.AgriAutomation.api.repositories.SensorRepository;
@@ -20,7 +21,7 @@ public class SensorService {
        return sensorRepository.findAll();
     }
 
-    public Iterable<Sensor> findAllByCourseId(int plantCareSystemId) {
+    public Iterable<Sensor> findAllByPlantCareSystemId(int plantCareSystemId) {
         return sensorRepository.findAllByPlantCareSystemId(plantCareSystemId);
     }
 
@@ -39,4 +40,5 @@ public class SensorService {
     public boolean existsById(int id) {
         return sensorRepository.existsById(id);
     }
+
 }
