@@ -74,17 +74,11 @@ public class Sensor {
         return readingTimestamp;
     }
 
-    public void setReadingTimestamp(LocalDateTime readingTimestamp) {
-        this.readingTimestamp = readingTimestamp;
-    }
 
     public LocalDateTime getCalibrationTimestamp() {
         return calibrationTimestamp;
     }
 
-    public void setCalibrationTimestamp(LocalDateTime calibrationTimestamp) {
-        this.calibrationTimestamp = calibrationTimestamp;
-    }
 
     public int getTemperature() {
         return temperature;
@@ -93,4 +87,20 @@ public class Sensor {
     public void setTemperature(int temperature) {
         this.temperature = temperature;
     }
+
+    // Lifecycle Callbacks to automatically set timestamps
+    @PrePersist
+    public void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.readingTimestamp = now;
+        this.calibrationTimestamp = now;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.readingTimestamp = now;
+        this.calibrationTimestamp = now;
+    }
 }
+

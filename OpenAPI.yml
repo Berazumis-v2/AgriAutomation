@@ -35,11 +35,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PlantCareSystemRequest'
-            example:
-              name: "Greenhouse System"
-              description: "Automated greenhouse system"
-              automationEnabled: true
-              maintenanceTimeStamp: "2023-10-01T12:00:00Z"
+            examples:
+              WithoutMaintenanceTimeStamp:
+                summary: Create PlantCareSystem without maintenanceTimeStamp
+                value:
+                  name: "Outdoor System"
+                  description: "Outdoor plant monitoring system"
+                  automationEnabled: false
       responses:
         '201':
           description: Plant care system created successfully
@@ -48,6 +50,10 @@ paths:
               description: URL of the created resource
               schema:
                 type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantCareSystemResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '422':
@@ -81,11 +87,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PlantCareSystemRequest'
-            example:
-              name: "Updated System Name"
-              description: "Updated description"
-              automationEnabled: false
-              maintenanceTimeStamp: "2023-11-01T12:00:00Z"
+            examples:
+              WithoutMaintenanceTimeStamp:
+                summary: Update PlantCareSystem without maintenanceTimeStamp
+                value:
+                  name: "Updated System Name"
+                  description: "Updated description"
+                  automationEnabled: false
       responses:
         '200':
           description: Updated plant care system
@@ -140,12 +148,14 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SensorRequest'
-            example:
-              model: "SensorModelX"
-              temperature: 25
-              humidity: 60
-              readingTimestamp: "2023-10-05T14:30:00Z"
-              calibrationTimestamp: "2023-10-01T12:00:00Z"
+            examples:
+              WithoutTimestamps:
+                summary: Create Sensor without reading and calibration timestamps
+                value:
+                  model: "SensorModelY"
+                  temperature: 20
+                  humidity: 50
+                  plantCareSystemId: 1
       responses:
         '201':
           description: Sensor created successfully
@@ -154,6 +164,10 @@ paths:
               description: URL of the created resource
               schema:
                 type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -190,12 +204,14 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SensorRequest'
-            example:
-              model: "UpdatedModelY"
-              temperature: 22
-              humidity: 55
-              readingTimestamp: "2023-11-05T14:30:00Z"
-              calibrationTimestamp: "2023-11-01T12:00:00Z"
+            examples:
+              WithoutTimestamps:
+                summary: Update Sensor without reading and calibration timestamps
+                value:
+                  model: "UpdatedModelZ"
+                  temperature: 23
+                  humidity: 57
+                  plantCareSystemId: 1
       responses:
         '200':
           description: Updated sensor
@@ -251,9 +267,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PlantRequest'
-            example:
-              name: "Tomato"
-              growthStage: "Seedling"
+            examples:
+              CreatePlant:
+                summary: Create a new plant
+                value:
+                  name: "Tomato"
+                  growthStage: "Seedling"
       responses:
         '201':
           description: Plant created successfully
@@ -262,6 +281,10 @@ paths:
               description: URL of the created resource
               schema:
                 type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -299,9 +322,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PlantRequest'
-            example:
-              name: "Updated Tomato"
-              growthStage: "Vegetative"
+            examples:
+              UpdatePlant:
+                summary: Update an existing plant
+                value:
+                  name: "Updated Tomato"
+                  growthStage: "Vegetative"
       responses:
         '200':
           description: Updated plant
@@ -344,18 +370,19 @@ components:
         automationEnabled:
           type: boolean
           description: Automation status
-        maintenanceTimeStamp:
-          type: string
-          format: date-time
-          description: Last maintenance timestamp
+      description: Request schema for creating or updating a PlantCareSystem
+
     PlantCareSystemResponse:
       allOf:
         - $ref: '#/components/schemas/PlantCareSystemRequest'
         - type: object
           properties:
             id:
-              type: int
+              type: integer
               description: Unique identifier
+              example: 1
+          description: Response schema for PlantCareSystem including its ID
+
     SensorRequest:
       type: object
       required:
@@ -365,27 +392,38 @@ components:
           type: string
           description: Sensor model
         temperature:
-          type: int
+          type: integer
           description: Current temperature reading
         humidity:
-          type: int
+          type: integer
           description: Current humidity reading
-        readingTimestamp:
-          type: string
-          format: date-time
-          description: Timestamp of the reading
-        calibrationTimestamp:
-          type: string
-          format: date-time
-          description: Last calibration timestamp
+        plantCareSystemId:
+          type: integer
+          description: The unique identifier of the associated PlantCareSystem
+          example: 1
+      description: Request schema for creating or updating a Sensor
+
     SensorResponse:
       allOf:
         - $ref: '#/components/schemas/SensorRequest'
         - type: object
           properties:
             id:
-              type: int
+              type: integer
               description: Unique identifier
+              example: 1
+            readingTimestamp:
+              type: string
+              format: date-time
+              description: Timestamp of the sensor reading
+              example: "2024-04-27T14:30:00"
+            calibrationTimestamp:
+              type: string
+              format: date-time
+              description: Last calibration timestamp
+              example: "2024-04-01T12:00:00"
+          description: Response schema for Sensor including its ID and timestamps
+
     PlantRequest:
       type: object
       required:
@@ -397,36 +435,52 @@ components:
         growthStage:
           type: string
           description: Growth stage of the plant (e.g., Seedling, Vegetative, Flowering)
+      description: Request schema for creating or updating a Plant
+
     PlantResponse:
       allOf:
         - $ref: '#/components/schemas/PlantRequest'
         - type: object
           properties:
             id:
-              type: int
+              type: integer
               description: Unique identifier
+              example: 1
+          description: Response schema for Plant including its ID
+
     ErrorResponse:
       type: object
       properties:
         message:
           type: string
           description: Error message
+          example: "Invalid request data"
         details:
           type: array
           items:
             $ref: '#/components/schemas/ErrorDetail'
+          example:
+            - resource: "PlantCareSystem"
+              field: "name"
+              code: "must not be blank"
+      description: Schema for error responses
+
     ErrorDetail:
       type: object
       properties:
         resource:
           type: string
           description: Resource where the error occurred
+          example: "PlantCareSystem"
         field:
           type: string
           description: Field where the error occurred
+          example: "name"
         code:
           type: string
           description: Error code
+          example: "must not be blank"
+      description: Detailed information about an error
 
   parameters:
     plantCareSystemId:
@@ -434,24 +488,27 @@ components:
       in: path
       required: true
       schema:
-        type: int
+        type: integer
         minimum: 1
+        example: 1
       description: The unique identifier of the plant care system
     sensorId:
       name: sensorId
       in: path
       required: true
       schema:
-        type: int
+        type: integer
         minimum: 1
+        example: 1
       description: The unique identifier of the sensor
     plantId:
       name: plantId
       in: path
       required: true
       schema:
-        type: int
+        type: integer
         minimum: 1
+        example: 1
       description: The unique identifier of the plant
 
   responses:
