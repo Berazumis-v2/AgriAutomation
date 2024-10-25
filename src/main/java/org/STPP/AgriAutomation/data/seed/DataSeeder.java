@@ -9,8 +9,7 @@ import org.STPP.AgriAutomation.data.entities.Sensor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -33,15 +32,15 @@ public class DataSeeder implements CommandLineRunner {
             // Create PlantCareSystems
             PlantCareSystem greenhouseSystem = new PlantCareSystem("Greenhouse System", "Automated greenhouse control system");
             greenhouseSystem.setAutomationEnabled(true);
-            greenhouseSystem.setMaintenanceTimeStamp(Timestamp.from(Instant.parse("2024-04-01T10:00:00Z")));
+            greenhouseSystem.setMaintenanceTimeStamp(LocalDateTime.parse("2024-04-01T10:00:00"));
 
             PlantCareSystem outdoorSystem = new PlantCareSystem("Outdoor System", "Outdoor plant monitoring system");
             outdoorSystem.setAutomationEnabled(false);
-            outdoorSystem.setMaintenanceTimeStamp(Timestamp.from(Instant.parse("2024-03-15T09:30:00Z")));
+            outdoorSystem.setMaintenanceTimeStamp(LocalDateTime.parse("2024-03-15T09:30:00"));
 
             PlantCareSystem verticalFarmSystem = new PlantCareSystem("Vertical Farm System", "Space-efficient vertical farming system");
             verticalFarmSystem.setAutomationEnabled(true);
-            verticalFarmSystem.setMaintenanceTimeStamp(Timestamp.from(Instant.parse("2024-05-10T08:45:00Z")));
+            verticalFarmSystem.setMaintenanceTimeStamp(LocalDateTime.parse("2024-05-10T08:45:00"));
 
             pcsRepository.saveAll(List.of(greenhouseSystem, outdoorSystem, verticalFarmSystem));
 
@@ -49,46 +48,46 @@ public class DataSeeder implements CommandLineRunner {
             Sensor tempSensorGH = new Sensor("TempModelGH-100", greenhouseSystem);
             tempSensorGH.setTemperature(22);
             tempSensorGH.setHumidity(55);
-            tempSensorGH.setReadingTimestamp(Timestamp.from(Instant.now()));
-            tempSensorGH.setCalibrationTimestamp(Timestamp.from(Instant.parse("2024-04-01T09:00:00Z")));
+            tempSensorGH.setReadingTimestamp(LocalDateTime.now());
+            tempSensorGH.setCalibrationTimestamp(LocalDateTime.now());
 
             Sensor humiditySensorGH = new Sensor("HumModelGH-200", greenhouseSystem);
             humiditySensorGH.setTemperature(23);
             humiditySensorGH.setHumidity(60);
-            humiditySensorGH.setReadingTimestamp(Timestamp.from(Instant.now()));
-            humiditySensorGH.setCalibrationTimestamp(Timestamp.from(Instant.parse("2024-04-01T09:15:00Z")));
+            humiditySensorGH.setReadingTimestamp(LocalDateTime.now());
+            humiditySensorGH.setCalibrationTimestamp(LocalDateTime.now());
 
             Sensor lightSensorGH = new Sensor("LightModelGH-300", greenhouseSystem);
             lightSensorGH.setTemperature(21);
             lightSensorGH.setHumidity(58);
-            lightSensorGH.setReadingTimestamp(Timestamp.from(Instant.now()));
-            lightSensorGH.setCalibrationTimestamp(Timestamp.from(Instant.parse("2024-04-01T09:30:00Z")));
+            lightSensorGH.setReadingTimestamp(LocalDateTime.now());
+            lightSensorGH.setCalibrationTimestamp(LocalDateTime.now());
 
             // Create Sensors for Outdoor System
             Sensor tempSensorOD = new Sensor("TempModelOD-100", outdoorSystem);
             tempSensorOD.setTemperature(18);
             tempSensorOD.setHumidity(40);
-            tempSensorOD.setReadingTimestamp(Timestamp.from(Instant.now()));
-            tempSensorOD.setCalibrationTimestamp(Timestamp.from(Instant.parse("2024-03-15T08:00:00Z")));
+            tempSensorOD.setReadingTimestamp(LocalDateTime.now());
+            tempSensorOD.setCalibrationTimestamp(LocalDateTime.now());
 
             Sensor soilMoistureSensorOD = new Sensor("SoilModelOD-200", outdoorSystem);
             soilMoistureSensorOD.setTemperature(19);
             soilMoistureSensorOD.setHumidity(45);
-            soilMoistureSensorOD.setReadingTimestamp(Timestamp.from(Instant.now()));
-            soilMoistureSensorOD.setCalibrationTimestamp(Timestamp.from(Instant.parse("2024-03-15T08:15:00Z")));
+            soilMoistureSensorOD.setReadingTimestamp(LocalDateTime.now());
+            soilMoistureSensorOD.setCalibrationTimestamp(LocalDateTime.now());
 
             // Create Sensors for Vertical Farm System
             Sensor tempSensorVF = new Sensor("TempModelVF-100", verticalFarmSystem);
             tempSensorVF.setTemperature(20);
             tempSensorVF.setHumidity(50);
-            tempSensorVF.setReadingTimestamp(Timestamp.from(Instant.now()));
-            tempSensorVF.setCalibrationTimestamp(Timestamp.from(Instant.parse("2024-05-10T07:00:00Z")));
+            tempSensorVF.setReadingTimestamp(LocalDateTime.now());
+            tempSensorVF.setCalibrationTimestamp(LocalDateTime.now());
 
             Sensor humiditySensorVF = new Sensor("HumModelVF-200", verticalFarmSystem);
             humiditySensorVF.setTemperature(21);
             humiditySensorVF.setHumidity(55);
-            humiditySensorVF.setReadingTimestamp(Timestamp.from(Instant.now()));
-            humiditySensorVF.setCalibrationTimestamp(Timestamp.from(Instant.parse("2024-05-10T07:15:00Z")));
+            humiditySensorVF.setReadingTimestamp(LocalDateTime.now());
+            humiditySensorVF.setCalibrationTimestamp(LocalDateTime.now());
 
             sensorRepository.saveAll(List.of(
                     tempSensorGH, humiditySensorGH, lightSensorGH,

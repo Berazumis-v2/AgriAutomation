@@ -5,298 +5,444 @@ info:
   version: 1.0.0
 
 servers:
-  - url: localhost:8080
+  - url: http://localhost:8080
     description: Local server
 
 paths:
-  /plantCareSystems:
+  /plantcaresystems:
     get:
       summary: Get a list of plant care systems
       tags:
-        - plant care system
-      operationId: getAll
+        - Plant Care System
+      operationId: getAllPlantCareSystems
       responses:
-        "200":
+        '200':
           description: A list of plant care systems
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/plantCareSystem"
-              example:
-                - id: 1
-                  name: "System 1"
-                - id: 2
-                  name: "System 2"
+                  $ref: '#/components/schemas/PlantCareSystemResponse'
     post:
-      description: "Create a plant care system"
+      summary: Create a new plant care system
       tags:
-        - plant care system
-      operationId: createPlant
+        - Plant Care System
+      operationId: createPlantCareSystem
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/createPlantCareSystem"
+              $ref: '#/components/schemas/PlantCareSystemRequest'
             example:
-              - name: "System 1"
+              name: "Greenhouse System"
+              description: "Automated greenhouse system"
+              automationEnabled: true
+              maintenanceTimeStamp: "2023-10-01T12:00:00Z"
       responses:
-        "201":
-          $ref: "#/components/responses/singlePlantCareSystem"
-        "400":
-          $ref: "#/components/responses/badRequest"
-        "422":
-          $ref: "#/components/responses/unprocessableEntity"
+        '201':
+          description: Plant care system created successfully
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 
-  /plantCareSystems/{plantCareSystemId}:
+  /plantcaresystems/{plantCareSystemId}:
     parameters:
       - $ref: '#/components/parameters/plantCareSystemId'
     get:
       summary: Get a plant care system by ID
       tags:
-        - plant care system
-      operationId: getPlantCareSystem
+        - Plant Care System
+      operationId: getPlantCareSystemById
       responses:
-        "200":
-          $ref: "#/components/responses/singlePlantCareSystem"
-        "404":
-          $ref: "#/components/responses/notFound"
+        '200':
+          description: A single plant care system
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantCareSystemResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       summary: Update a plant care system by ID
       tags:
-        - plant care system
-      operationId: updatePlantCareSystem
+        - Plant Care System
+      operationId: updatePlantCareSystemById
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/updatePlantCareSystem"
+              $ref: '#/components/schemas/PlantCareSystemRequest'
             example:
-              - name: "System 3"
+              name: "Updated System Name"
+              description: "Updated description"
+              automationEnabled: false
+              maintenanceTimeStamp: "2023-11-01T12:00:00Z"
       responses:
-        "200":
-          $ref: "#/components/responses/singlePlantCareSystem"
-        "400":
-          $ref: "#/components/responses/badRequest"
-        "404":
-          $ref: "#/components/responses/notFound"
-        "422":
-          $ref: "#/components/responses/unprocessableEntity"
+        '200':
+          description: Updated plant care system
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantCareSystemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
     delete:
       summary: Delete a plant care system by ID
       tags:
-        - plant care system
-      operationId: deletePlantCareSystem
+        - Plant Care System
+      operationId: deletePlantCareSystemById
       responses:
-        "404":
-          $ref: "#/components/responses/notFound"
-        "204":
-          description: Plant care system deleted
-  /plantCareSystems/{plantCareSystemId}/sensors:
+        '204':
+          description: Plant care system deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /plantcaresystems/{plantCareSystemId}/sensors:
     parameters:
       - $ref: '#/components/parameters/plantCareSystemId'
     get:
       summary: Get sensors for a plant care system
       tags:
-        - sensor
-      operationId: getSensors
+        - Sensor
+      operationId: getSensorsByPlantCareSystemId
       responses:
-        "200":
+        '200':
           description: List of sensors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
-      description: 'Add a sensor'
+      summary: Add a sensor to a plant care system
       tags:
-        - sensor
+        - Sensor
       operationId: createSensor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorRequest'
+            example:
+              model: "SensorModelX"
+              temperature: 25
+              humidity: 60
+              readingTimestamp: "2023-10-05T14:30:00Z"
+              calibrationTimestamp: "2023-10-01T12:00:00Z"
       responses:
         '201':
-          description: OK
-  /plantCareSystems/{plantCareSystemId}/sensors/{sensorId}:
+          description: Sensor created successfully
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /plantcaresystems/{plantCareSystemId}/sensors/{sensorId}:
     parameters:
       - $ref: '#/components/parameters/plantCareSystemId'
       - $ref: '#/components/parameters/sensorId'
     get:
-      summary: Get a specific sensor for a plant
+      summary: Get a specific sensor by ID
       tags:
-        - sensor
-      operationId: getSensor
+        - Sensor
+      operationId: getSensorById
       responses:
-        "200":
+        '200':
           description: A single sensor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
-      summary: Update a sensor for a plant care system
+      summary: Update a sensor by ID
       tags:
-        - sensor
-      operationId: updateSensor
+        - Sensor
+      operationId: updateSensorById
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorRequest'
+            example:
+              model: "UpdatedModelY"
+              temperature: 22
+              humidity: 55
+              readingTimestamp: "2023-11-05T14:30:00Z"
+              calibrationTimestamp: "2023-11-01T12:00:00Z"
       responses:
-        "200":
+        '200':
           description: Updated sensor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
     delete:
-      summary: Delete a sensor for a plant care system
+      summary: Delete a sensor by ID
       tags:
-        - sensor
-      operationId: deleteSensor
+        - Sensor
+      operationId: deleteSensorById
       responses:
-        "204":
-          description: Sensor deleted
-  /plantCareSystems/{plantCareSystemId}/sensors/{sensorId}/plants:
+        '204':
+          description: Sensor deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /plantcaresystems/{plantCareSystemId}/sensors/{sensorId}/plants:
     parameters:
       - $ref: '#/components/parameters/plantCareSystemId'
       - $ref: '#/components/parameters/sensorId'
     get:
       summary: Get plants for a specific sensor
       tags:
-        - plant
-      operationId: getPlants
+        - Plant
+      operationId: getPlantsBySensorId
       responses:
-        "200":
+        '200':
           description: List of plants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlantResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
-      description: "Add a plant for a specific sensor"
+      summary: Add a plant to a sensor
       tags:
-        - plant
+        - Plant
       operationId: createPlant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantRequest'
+            example:
+              name: "Tomato"
+              growthStage: "Seedling"
       responses:
-        "201":
-          description: OK
-  /plantCareSystems/{id}/sensors/{sensorId}/plants/{plantId}:
+        '201':
+          description: Plant created successfully
+          headers:
+            Location:
+              description: URL of the created resource
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /plantcaresystems/{plantCareSystemId}/sensors/{sensorId}/plants/{plantId}:
     parameters:
       - $ref: '#/components/parameters/plantCareSystemId'
       - $ref: '#/components/parameters/sensorId'
       - $ref: '#/components/parameters/plantId'
     get:
-      summary: Get a specific plant
+      summary: Get a specific plant by ID
       tags:
-        - plant
-      operationId: getPlant
+        - Plant
+      operationId: getPlantById
       responses:
-        "200":
+        '200':
           description: A single plant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
-      summary: Update a plant
+      summary: Update a plant by ID
       tags:
-        - plant
-      operationId: updatePlant
+        - Plant
+      operationId: updatePlantById
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantRequest'
+            example:
+              name: "Updated Tomato"
+              growthStage: "Vegetative"
       responses:
-        "200":
+        '200':
           description: Updated plant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
     delete:
-      summary: Delete a plant
+      summary: Delete a plant by ID
       tags:
-        - plant
-      operationId: deletePlant
+        - Plant
+      operationId: deletePlantById
       responses:
-        "204":
-          description: Plant deleted
+        '204':
+          description: Plant deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   schemas:
-    plantCareSystem:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-    createPlantCareSystem:
+    PlantCareSystemRequest:
       type: object
       required:
         - name
       properties:
         name:
+          type: string
           minLength: 2
           maxLength: 100
-          pattern: "^[a-zA-Z0-9_]+$"  # Only allows letters, numbers, and underscores
+          description: Name of the plant care system
+        description:
           type: string
-    updatePlantCareSystem:
+          description: Description of the plant care system
+        automationEnabled:
+          type: boolean
+          description: Automation status
+        maintenanceTimeStamp:
+          type: string
+          format: date-time
+          description: Last maintenance timestamp
+    PlantCareSystemResponse:
+      allOf:
+        - $ref: '#/components/schemas/PlantCareSystemRequest'
+        - type: object
+          properties:
+            id:
+              type: int
+              description: Unique identifier
+    SensorRequest:
       type: object
+      required:
+        - model
+      properties:
+        model:
+          type: string
+          description: Sensor model
+        temperature:
+          type: int
+          description: Current temperature reading
+        humidity:
+          type: int
+          description: Current humidity reading
+        readingTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the reading
+        calibrationTimestamp:
+          type: string
+          format: date-time
+          description: Last calibration timestamp
+    SensorResponse:
+      allOf:
+        - $ref: '#/components/schemas/SensorRequest'
+        - type: object
+          properties:
+            id:
+              type: int
+              description: Unique identifier
+    PlantRequest:
+      type: object
+      required:
+        - name
       properties:
         name:
           type: string
-    sensor:
+          description: Name of the plant
+        growthStage:
+          type: string
+          description: Growth stage of the plant (e.g., Seedling, Vegetative, Flowering)
+    PlantResponse:
+      allOf:
+        - $ref: '#/components/schemas/PlantRequest'
+        - type: object
+          properties:
+            id:
+              type: int
+              description: Unique identifier
+    ErrorResponse:
       type: object
       properties:
-        id:
-          type: integer
-        name:
+        message:
           type: string
-    plant:
+          description: Error message
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
       type: object
       properties:
-        id:
-          type: integer
-        name:
+        resource:
           type: string
-    problemDetails:
-      type: object
-      properties:
-        type:
+          description: Resource where the error occurred
+        field:
           type: string
-          format: uri
-          description: A URI reference that identifies the problem type.
-        title:
+          description: Field where the error occurred
+        code:
           type: string
-          description: A short, human-readable summary of the problem type.
-        status:
-          type: integer
-          format: int32
-          description: The HTTP status code applicable to this problem.
-        detail:
-          type: string
-          description: A human-readable explanation specific to this occurrence of the problem.
-        instance:
-          type: string
-          format: uri
-          description: A URI reference that identifies the specific occurrence of the problem.
-        errors:
-          type: object
-          description: A map of detailed errors for every property ([property => error])
-  responses:
-    singlePlantCareSystem:
-      description: A plant care system
-      content:
-        application/json:
-          schema:
-            type: object
-            items:
-              $ref: "#/components/schemas/plantCareSystem"
-          example:
-            - id: 1
-              name: "System 1"
-    unprocessableEntity:
-      description: Unprocessable entity response
-      content:
-        application/problem+json:
-          schema:
-            type: object
-            items:
-              $ref: "#/components/schemas/problemDetails"
-          example:
-            type: "https://tools.ietf.org/html/rfc4918#section-11.2"
-            title: "Unprocessable Entity"
-            status: 422
-            errors:
-              Name:
-                - "'Name' must not be empty."
-    badRequest:
-      description: Bad request response
-    notFound:
-      description: Resource was not found
+          description: Error code
+
   parameters:
     plantCareSystemId:
       name: plantCareSystemId
       in: path
       required: true
       schema:
-        type: integer
+        type: int
         minimum: 1
-      description: The unique identifier of the plant plant care system
+      description: The unique identifier of the plant care system
     sensorId:
       name: sensorId
       in: path
       required: true
       schema:
-        type: integer
+        type: int
         minimum: 1
       description: The unique identifier of the sensor
     plantId:
@@ -304,18 +450,52 @@ components:
       in: path
       required: true
       schema:
-        type: integer
+        type: int
         minimum: 1
       description: The unique identifier of the plant
-  
-tags:
-  - name: plant
-    description: Operations related to plant care systems
-  - name: post
-    description: Operations related to sensors
-  - name: comment
-    description: Operations related to plants
 
-externalDocs:
-  description: Find more info here
-  url: https://example.com/docs
+  responses:
+    BadRequest:
+      description: Bad request due to invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Invalid request data"
+            details:
+              - resource: "PlantCareSystem"
+                field: "name"
+                code: "must not be blank"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "PlantCareSystem not found with id 1"
+            details:
+              - resource: "PlantCareSystem"
+                field: "id"
+                code: "not_found"
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Validation Failed"
+            details:
+              - resource: "PlantCareSystem"
+                field: "name"
+                code: "size must be between 2 and 100"
+
+tags:
+  - name: Plant Care System
+    description: Operations related to plant care systems
+  - name: Sensor
+    description: Operations related to sensors
+  - name: Plant
+    description: Operations related to plants

@@ -43,7 +43,7 @@ public class PlantCareSystemController {
     public ResponseEntity<PlantCareSystemResponseDTO> findById(@PathVariable int id) {
         logger.info("Finding plant care system with id: {}", id);
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", id));
 
         PlantCareSystemResponseDTO responseDTO = PlantCareSystemConverter.convertToResponseDTO(plantCareSystem);
         return ResponseEntity.ok(responseDTO);
@@ -71,13 +71,17 @@ public class PlantCareSystemController {
         logger.info("Updating plant care system with id: {}", id);
 
         PlantCareSystem existingPlantCareSystem = plantCareSystemService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", id));
 
         // Update fields
         existingPlantCareSystem.setName(requestDTO.getName());
         existingPlantCareSystem.setDescription(requestDTO.getDescription());
         existingPlantCareSystem.setAutomationEnabled(requestDTO.isAutomationEnabled());
-        existingPlantCareSystem.setMaintenanceTimeStamp(requestDTO.getMaintenanceTimeStamp());
+
+        if (requestDTO.getMaintenanceTimeStamp() != null) {
+            existingPlantCareSystem.setMaintenanceTimeStamp(requestDTO.getMaintenanceTimeStamp());
+        }
+        // If maintenanceTimeStamp is not provided, retain the existing value
 
         PlantCareSystem updatedPlantCareSystem = plantCareSystemService.save(existingPlantCareSystem);
 
@@ -89,7 +93,7 @@ public class PlantCareSystemController {
     public ResponseEntity<Void> deleteById(@PathVariable int id) {
         logger.info("Deleting plant care system with id: {}", id);
         if (!plantCareSystemService.existsById(id)) {
-            throw new ResourceNotFoundException("PlantCareSystem with id " + id + " not found");
+            throw new ResourceNotFoundException("PlantCareSystem", "id", id);
         }
 
         plantCareSystemService.deleteById(id);

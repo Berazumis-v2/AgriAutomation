@@ -30,7 +30,12 @@ public class PlantCareSystemConverter {
         plantCareSystem.setName(dto.getName());
         plantCareSystem.setDescription(dto.getDescription());
         plantCareSystem.setAutomationEnabled(dto.isAutomationEnabled());
-        plantCareSystem.setMaintenanceTimeStamp(dto.getMaintenanceTimeStamp());
+
+        if (dto.getMaintenanceTimeStamp() != null) {
+            plantCareSystem.setMaintenanceTimeStamp(dto.getMaintenanceTimeStamp());
+        }
+        // If maintenanceTimeStamp is null, it will be set by the @PrePersist method in the entity
+
         return plantCareSystem;
     }
 }

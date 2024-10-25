@@ -12,10 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -93,5 +95,41 @@ public class GlobalExceptionHandler {
         logger.info("Transaction system error: {}", errorResponse);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex) {
+        ErrorDetail errorDetail = new ErrorDetail(
+                "Endpoint",
+                ex.getRequestURL(),
+                "not_found"
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Invalid URL used: " + ex.getHttpMethod() + " " + ex.getRequestURL(),
+                Arrays.asList(errorDetail)
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
+        String supportedMethods = String.join(", ", ex.getSupportedMethods());
+
+        ErrorDetail errorDetail = new ErrorDetail(
+                "Method",
+                ex.getMethod(),
+                "method_not_allowed"
+        );
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                ex.getMethod() + " method is not supported for this endpoint. Supported methods are: " + supportedMethods,
+                Arrays.asList(errorDetail)
+        );
+
+        logger.info("Method not supported error: {}", errorResponse);
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(errorResponse);
     }
 }

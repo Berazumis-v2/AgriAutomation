@@ -1,9 +1,8 @@
 package org.STPP.AgriAutomation.data.entities;
 
 import jakarta.persistence.*;
-
 import java.util.List;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 public class PlantCareSystem {
@@ -14,11 +13,9 @@ public class PlantCareSystem {
     private String name;
     private String description;
     private boolean automationEnabled;
-    private Timestamp maintenanceTimeStamp;
+    private LocalDateTime maintenanceTimeStamp;
 
-
-
-    @OneToMany(mappedBy = "plantCareSystem",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "plantCareSystem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sensor> sensors;
 
     public PlantCareSystem() {}
@@ -28,24 +25,32 @@ public class PlantCareSystem {
         this.description = description;
     }
 
-    public int getId() {return id;}
+    // Getters and Setters
 
-    public void setId(int id) {this.id = id;}
+    public int getId() { return id; }
 
-    public String getName() {return name;}
+    public void setId(int id) { this.id = id; }
 
-    public void setName(String name) {this.name = name;}
+    public String getName() { return name; }
 
-    public String getDescription() {return description;}
+    public void setName(String name) { this.name = name; }
 
-    public void setDescription(String description) {this.description = description;}
+    public String getDescription() { return description; }
 
-    public boolean isAutomationEnabled() {return automationEnabled;}
+    public void setDescription(String description) { this.description = description; }
 
-    public void setAutomationEnabled(boolean automationEnabled) {this.automationEnabled = automationEnabled;}
+    public boolean isAutomationEnabled() { return automationEnabled; }
 
-    public Timestamp getMaintenanceTimeStamp() {return maintenanceTimeStamp;}
+    public void setAutomationEnabled(boolean automationEnabled) { this.automationEnabled = automationEnabled; }
 
-    public void setMaintenanceTimeStamp(Timestamp maintenanceTimeStamp) {this.maintenanceTimeStamp = maintenanceTimeStamp;}
+    public LocalDateTime getMaintenanceTimeStamp() { return maintenanceTimeStamp; }
 
+    public void setMaintenanceTimeStamp(LocalDateTime maintenanceTimeStamp) { this.maintenanceTimeStamp = maintenanceTimeStamp; }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.maintenanceTimeStamp == null) {
+            this.maintenanceTimeStamp = LocalDateTime.now();
+        }
+    }
 }

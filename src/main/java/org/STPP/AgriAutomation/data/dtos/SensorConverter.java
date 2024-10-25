@@ -34,7 +34,7 @@ public class SensorConverter {
         sensor.setHumidity(dto.getHumidity());
         sensor.setReadingTimestamp(dto.getReadingTimestamp());
         sensor.setCalibrationTimestamp(dto.getCalibrationTimestamp());
-        // The PlantCareSystem association will be set in the service layer
+        // The PlantCareSystem association will be set in the controller or service layer
         return sensor;
     }
 }

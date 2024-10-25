@@ -1,6 +1,7 @@
 package org.STPP.AgriAutomation.data.dtos;
 
-import java.sql.Timestamp;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 
 public class PlantCareSystemResponseDTO {
 
@@ -8,11 +9,13 @@ public class PlantCareSystemResponseDTO {
     private String name;
     private String description;
     private boolean automationEnabled;
-    private Timestamp maintenanceTimeStamp;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime maintenanceTimeStamp;
 
     public PlantCareSystemResponseDTO() {}
 
-    public PlantCareSystemResponseDTO(int id, String name, String description, boolean automationEnabled, Timestamp maintenanceTimeStamp) {
+    public PlantCareSystemResponseDTO(int id, String name, String description, boolean automationEnabled, LocalDateTime maintenanceTimeStamp) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -54,11 +57,11 @@ public class PlantCareSystemResponseDTO {
         this.automationEnabled = automationEnabled;
     }
 
-    public Timestamp getMaintenanceTimeStamp() {
+    public LocalDateTime getMaintenanceTimeStamp() {
         return maintenanceTimeStamp;
     }
 
-    public void setMaintenanceTimeStamp(Timestamp maintenanceTimeStamp) {
+    public void setMaintenanceTimeStamp(LocalDateTime maintenanceTimeStamp) {
         this.maintenanceTimeStamp = maintenanceTimeStamp;
     }
 }

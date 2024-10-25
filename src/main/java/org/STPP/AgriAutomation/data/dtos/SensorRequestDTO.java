@@ -1,7 +1,8 @@
 package org.STPP.AgriAutomation.data.dtos;
 
 import jakarta.validation.constraints.NotBlank;
-import java.sql.Timestamp;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 
 public class SensorRequestDTO {
 
@@ -10,14 +11,22 @@ public class SensorRequestDTO {
 
     private int temperature;
     private int humidity;
-    private Timestamp readingTimestamp;
-    private Timestamp calibrationTimestamp;
+
+    /**
+     * Optional fields. If not provided, they can be set to the current time or handled accordingly.
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime readingTimestamp;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime calibrationTimestamp;
+
     private int plantCareSystemId;  // Assuming you refer to PlantCareSystem by its ID
 
     public SensorRequestDTO() {}
 
-    public SensorRequestDTO(String model, int temperature, int humidity, Timestamp readingTimestamp,
-                            Timestamp calibrationTimestamp, int plantCareSystemId) {
+    public SensorRequestDTO(String model, int temperature, int humidity, LocalDateTime readingTimestamp,
+                            LocalDateTime calibrationTimestamp, int plantCareSystemId) {
         this.model = model;
         this.temperature = temperature;
         this.humidity = humidity;
@@ -52,19 +61,19 @@ public class SensorRequestDTO {
         this.humidity = humidity;
     }
 
-    public Timestamp getReadingTimestamp() {
+    public LocalDateTime getReadingTimestamp() {
         return readingTimestamp;
     }
 
-    public void setReadingTimestamp(Timestamp readingTimestamp) {
+    public void setReadingTimestamp(LocalDateTime readingTimestamp) {
         this.readingTimestamp = readingTimestamp;
     }
 
-    public Timestamp getCalibrationTimestamp() {
+    public LocalDateTime getCalibrationTimestamp() {
         return calibrationTimestamp;
     }
 
-    public void setCalibrationTimestamp(Timestamp calibrationTimestamp) {
+    public void setCalibrationTimestamp(LocalDateTime calibrationTimestamp) {
         this.calibrationTimestamp = calibrationTimestamp;
     }
 

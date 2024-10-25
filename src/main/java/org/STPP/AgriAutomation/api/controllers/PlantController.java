@@ -1,3 +1,4 @@
+// PlantController.java
 package org.STPP.AgriAutomation.api.controllers;
 
 import org.STPP.AgriAutomation.data.entities.Plant;
@@ -44,13 +45,13 @@ public class PlantController {
         logger.info("Finding all plants for Sensor with id: {} and PlantCareSystem with id: {}", sensorId, plantcaresystemId);
 
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + plantcaresystemId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 
         Sensor sensor = sensorService.findById(sensorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sensor with id " + sensorId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sensor", "id", sensorId));
 
         if (sensor.getPlantCareSystem() == null || sensor.getPlantCareSystem().getId() != plantcaresystemId) {
-            throw new ResourceNotFoundException("Sensor with id " + sensorId + " not found for PlantCareSystem with id " + plantcaresystemId);
+            throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
         }
 
         List<Plant> plants = (List<Plant>) plantService.findAllBySensorId(sensorId);
@@ -61,20 +62,20 @@ public class PlantController {
     @GetMapping("/{plantId}")
     public ResponseEntity<PlantResponseDTO> findById(@PathVariable int plantcaresystemId, @PathVariable int sensorId, @PathVariable int plantId) {
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + plantcaresystemId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 
         Sensor sensor = sensorService.findById(sensorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sensor with id " + sensorId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sensor", "id", sensorId));
 
         if (sensor.getPlantCareSystem() == null || sensor.getPlantCareSystem().getId() != plantcaresystemId) {
-            throw new ResourceNotFoundException("Sensor with id " + sensorId + " not found for PlantCareSystem with id " + plantcaresystemId);
+            throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
         }
 
         Plant plant = plantService.findById(plantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Plant with id " + plantId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Plant", "id", plantId));
 
         if (plant.getSensor() == null || plant.getSensor().getId() != sensorId) {
-            throw new ResourceNotFoundException("Plant with id " + plantId + " not found for Sensor with id " + sensorId);
+            throw new ResourceNotFoundException("Plant", "sensorId", sensorId);
         }
 
         PlantResponseDTO responseDTO = PlantConverter.convertToResponseDTO(plant);
@@ -89,13 +90,13 @@ public class PlantController {
             UriComponentsBuilder uriBuilder) {
 
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + plantcaresystemId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 
         Sensor sensor = sensorService.findById(sensorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sensor with id " + sensorId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sensor", "id", sensorId));
 
         if (sensor.getPlantCareSystem() == null || sensor.getPlantCareSystem().getId() != plantcaresystemId) {
-            throw new ResourceNotFoundException("Sensor with id " + sensorId + " not found for PlantCareSystem with id " + plantcaresystemId);
+            throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
         }
 
         Plant plant = PlantConverter.convertToEntity(requestDTO);
@@ -117,20 +118,20 @@ public class PlantController {
             @PathVariable int plantId,
             @Valid @RequestBody PlantRequestDTO requestDTO) {
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + plantcaresystemId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 
         Sensor sensor = sensorService.findById(sensorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sensor with id " + sensorId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sensor", "id", sensorId));
 
         if (sensor.getPlantCareSystem() == null || sensor.getPlantCareSystem().getId() != plantcaresystemId) {
-            throw new ResourceNotFoundException("Sensor with id " + sensorId + " not found for PlantCareSystem with id " + plantcaresystemId);
+            throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
         }
 
         Plant existingPlant = plantService.findById(plantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Plant with id " + plantId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Plant", "id", plantId));
 
         if (existingPlant.getSensor() == null || existingPlant.getSensor().getId() != sensorId) {
-            throw new ResourceNotFoundException("Plant with id " + plantId + " not found for Sensor with id " + sensorId);
+            throw new ResourceNotFoundException("Plant", "sensorId", sensorId);
         }
 
         existingPlant.setName(requestDTO.getName());
@@ -148,20 +149,20 @@ public class PlantController {
             @PathVariable int sensorId,
             @PathVariable int plantId) {
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem with id " + plantcaresystemId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 
         Sensor sensor = sensorService.findById(sensorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sensor with id " + sensorId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sensor", "id", sensorId));
 
         if (sensor.getPlantCareSystem() == null || sensor.getPlantCareSystem().getId() != plantcaresystemId) {
-            throw new ResourceNotFoundException("Sensor with id " + sensorId + " not found for PlantCareSystem with id " + plantcaresystemId);
+            throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
         }
 
         Plant existingPlant = plantService.findById(plantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Plant with id " + plantId + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Plant", "id", plantId));
 
         if (existingPlant.getSensor() == null || existingPlant.getSensor().getId() != sensorId) {
-            throw new ResourceNotFoundException("Plant with id " + plantId + " not found for Sensor with id " + sensorId);
+            throw new ResourceNotFoundException("Plant", "sensorId", sensorId);
         }
 
         plantService.deleteById(plantId);

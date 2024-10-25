@@ -1,6 +1,7 @@
 package org.STPP.AgriAutomation.data.dtos;
 
-import java.sql.Timestamp;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 
 public class SensorResponseDTO {
 
@@ -8,14 +9,19 @@ public class SensorResponseDTO {
     private String model;
     private int temperature;
     private int humidity;
-    private Timestamp readingTimestamp;
-    private Timestamp calibrationTimestamp;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime readingTimestamp;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime calibrationTimestamp;
+
     private int plantCareSystemId;
 
     public SensorResponseDTO() {}
 
-    public SensorResponseDTO(int id, String model, int temperature, int humidity, Timestamp readingTimestamp,
-                             Timestamp calibrationTimestamp, int plantCareSystemId) {
+    public SensorResponseDTO(int id, String model, int temperature, int humidity, LocalDateTime readingTimestamp,
+                             LocalDateTime calibrationTimestamp, int plantCareSystemId) {
         this.id = id;
         this.model = model;
         this.temperature = temperature;
@@ -59,19 +65,19 @@ public class SensorResponseDTO {
         this.humidity = humidity;
     }
 
-    public Timestamp getReadingTimestamp() {
+    public LocalDateTime getReadingTimestamp() {
         return readingTimestamp;
     }
 
-    public void setReadingTimestamp(Timestamp readingTimestamp) {
+    public void setReadingTimestamp(LocalDateTime readingTimestamp) {
         this.readingTimestamp = readingTimestamp;
     }
 
-    public Timestamp getCalibrationTimestamp() {
+    public LocalDateTime getCalibrationTimestamp() {
         return calibrationTimestamp;
     }
 
-    public void setCalibrationTimestamp(Timestamp calibrationTimestamp) {
+    public void setCalibrationTimestamp(LocalDateTime calibrationTimestamp) {
         this.calibrationTimestamp = calibrationTimestamp;
     }
 

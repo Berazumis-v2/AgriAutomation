@@ -1,6 +1,6 @@
 package org.STPP.AgriAutomation.data.entities;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -15,9 +15,8 @@ public class Sensor {
     private String model;
     private int temperature;
     private int humidity;
-    private Timestamp readingTimestamp;
-    private Timestamp calibrationTimestamp;
-
+    private LocalDateTime readingTimestamp;
+    private LocalDateTime calibrationTimestamp;
 
     @ManyToOne
     @JoinColumn(name = "plantCareSystem_id", nullable = false)
@@ -37,31 +36,61 @@ public class Sensor {
         this.plantCareSystem = plantCareSystem;
     }
 
-    public int getId() {return id;}
+    // Getters and Setters
 
-    public void setId(int id) {this.id = id;}
+    public int getId() {
+        return id;
+    }
 
-    public String getModel() {return model;}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public void setModel(String model) {this.model = model;}
+    public String getModel() {
+        return model;
+    }
 
-    public int getHumidity() {return humidity;}
+    public void setModel(String model) {
+        this.model = model;
+    }
 
-    public void setHumidity(int humidity) {this.humidity = humidity;}
+    public int getHumidity() {
+        return humidity;
+    }
 
-    public PlantCareSystem getPlantCareSystem() {return plantCareSystem;}
+    public void setHumidity(int humidity) {
+        this.humidity = humidity;
+    }
 
-    public void setPlantCareSystem(PlantCareSystem plantCareSystem) {this.plantCareSystem = plantCareSystem;}
+    public PlantCareSystem getPlantCareSystem() {
+        return plantCareSystem;
+    }
 
-    public Timestamp getReadingTimestamp() {return readingTimestamp;}
+    public void setPlantCareSystem(PlantCareSystem plantCareSystem) {
+        this.plantCareSystem = plantCareSystem;
+    }
 
-    public void setReadingTimestamp(Timestamp readingTimestamp) {this.readingTimestamp = readingTimestamp;}
+    public LocalDateTime getReadingTimestamp() {
+        return readingTimestamp;
+    }
 
-    public Timestamp getCalibrationTimestamp() {return calibrationTimestamp;}
+    public void setReadingTimestamp(LocalDateTime readingTimestamp) {
+        this.readingTimestamp = readingTimestamp;
+    }
 
-    public void setCalibrationTimestamp(Timestamp calibrationTimestamp) {this.calibrationTimestamp = calibrationTimestamp;}
+    public LocalDateTime getCalibrationTimestamp() {
+        return calibrationTimestamp;
+    }
 
-    public int getTemperature() {return temperature;}
+    public void setCalibrationTimestamp(LocalDateTime calibrationTimestamp) {
+        this.calibrationTimestamp = calibrationTimestamp;
+    }
 
-    public void setTemperature(int temperature) {this.temperature = this.temperature;}
+    public int getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(int temperature) {
+        this.temperature = temperature;
+    }
 }
