@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.STPP.AgriAutomation.api.repositories.PCSRepository;
 import org.STPP.AgriAutomation.api.repositories.PlantRepository;
@@ -166,13 +167,13 @@ public class DataSeeder implements CommandLineRunner {
         List<String> roles = Arrays.asList("USER", "ADMIN");
 
         for (String roleName : roles) {
-            Role role = roleRepository.findByName(roleName);
-            if (role == null) {
-                role = new Role(roleName);
+            Optional<Role> roleOpt = roleRepository.findByName(roleName);
+            if (!roleOpt.isPresent()) {
+                Role role = new Role(roleName);
                 roleRepository.save(role);
-                System.out.println("Role '" + roleName + "' created.");
+                System.out.printf("Role '%s' created.%n", roleName);
             } else {
-                System.out.println("Role '" + roleName + "' already exists. Skipping creation.");
+                System.out.printf("Role '{}' already exists. Skipping creation.", roleName);
             }
         }
     }
@@ -184,45 +185,51 @@ public class DataSeeder implements CommandLineRunner {
         // Create Simple User
         String simpleUsername = "simpleUser";
         String simplePassword = "password123"; // In production, use a more secure password
-        if (userRepository.findByUsername(simpleUsername) == null) {
+        Optional<Users> existingSimpleUser = Optional.ofNullable(userRepository.findByUsername(simpleUsername));
+
+        if (!existingSimpleUser.isPresent()) {
             Users simpleUser = new Users();
             simpleUser.setUsername(simpleUsername);
             simpleUser.setPassword(passwordEncoder.encode(simplePassword));
 
-            Role userRole = roleRepository.findByName("USER");
-            if (userRole == null) {
-                System.out.println("USER role not found. Creating USER role.");
-                userRole = new Role("USER");
-                roleRepository.save(userRole);
+            // Assign the USER role
+            Optional<Role> userRoleOpt = roleRepository.findByName("USER");
+            if (userRoleOpt.isPresent()) {
+                simpleUser.setRoles(new HashSet<>(List.of(userRoleOpt.get())));
+            } else {
+                System.out.printf("USER role not found. Cannot assign role to simple user.");
+                return; // Exit if USER role is not present
             }
 
-            simpleUser.setRoles(new HashSet<>(List.of(userRole)));
             userRepository.save(simpleUser);
-            System.out.println("Simple user '" + simpleUsername + "' created.");
+            System.out.printf("Simple user '{}' created.", simpleUsername);
         } else {
-            System.out.println("Simple user '" + simpleUsername + "' already exists. Skipping creation.");
+            System.out.printf("Simple user '{}' already exists. Skipping creation.", simpleUsername);
         }
 
         // Create Admin User
         String adminUsername = "adminUser";
         String adminPassword = "adminPass123"; // In production, use a more secure password
-        if (userRepository.findByUsername(adminUsername) == null) {
+        Optional<Users> existingAdminUser = Optional.ofNullable(userRepository.findByUsername(adminUsername));
+
+        if (!existingAdminUser.isPresent()) {
             Users adminUser = new Users();
             adminUser.setUsername(adminUsername);
             adminUser.setPassword(passwordEncoder.encode(adminPassword));
 
-            Role adminRole = roleRepository.findByName("ADMIN");
-            if (adminRole == null) {
-                System.out.println("ADMIN role not found. Creating ADMIN role.");
-                adminRole = new Role("ADMIN");
-                roleRepository.save(adminRole);
+            // Assign the ADMIN role
+            Optional<Role> adminRoleOpt = roleRepository.findByName("ADMIN");
+            if (adminRoleOpt.isPresent()) {
+                adminUser.setRoles(new HashSet<>(List.of(adminRoleOpt.get())));
+            } else {
+                System.out.printf("ADMIN role not found. Cannot assign role to admin user.");
+                return; // Exit if ADMIN role is not present
             }
 
-            adminUser.setRoles(new HashSet<>(List.of(adminRole)));
             userRepository.save(adminUser);
-            System.out.println("Admin user '" + adminUsername + "' created.");
+            System.out.printf("Admin user '{}' created.", adminUsername);
         } else {
-            System.out.println("Admin user '" + adminUsername + "' already exists. Skipping creation.");
+            System.out.printf("Admin user '{}' already exists. Skipping creation.", adminUsername);
         }
     }
 }
