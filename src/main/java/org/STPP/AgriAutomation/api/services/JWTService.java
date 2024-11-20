@@ -4,12 +4,16 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import org.STPP.AgriAutomation.data.entities.UserPrincipal;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -35,18 +39,21 @@ public class JWTService {
         }
     }
 
-    public String generateToken(String username) {
+    public String generateToken(UserPrincipal userPrincipal) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userPrincipal.getId());
+        claims.put("roles", userPrincipal.getAuthorities()
+                            .stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .collect(Collectors.toList()));
         return Jwts.builder()
-                .claims()
-                .add(claims)
-                .subject(username)
+                .setHeaderParam("typ", "JWT")
+                .setClaims(claims)
+                .subject(userPrincipal.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 60 * 60 * 30))
-                .and()
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // 30 minutes
                 .signWith(getKey())
                 .compact();
-
     }
 
     private SecretKey getKey() {
@@ -55,8 +62,17 @@ public class JWTService {
     }
 
     public String extractUserName(String token) {
-        // extract the username from jwt token
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public Long extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("userId", Long.class);
+    }
+
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("roles", List.class);
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {

@@ -1,16 +1,24 @@
 package org.STPP.AgriAutomation.data.seed;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
 import org.STPP.AgriAutomation.api.repositories.PCSRepository;
 import org.STPP.AgriAutomation.api.repositories.PlantRepository;
+import org.STPP.AgriAutomation.api.repositories.RoleRepository;
 import org.STPP.AgriAutomation.api.repositories.SensorRepository;
+import org.STPP.AgriAutomation.api.repositories.UserRepo;
 import org.STPP.AgriAutomation.data.entities.Plant;
 import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
+import org.STPP.AgriAutomation.data.entities.Role;
 import org.STPP.AgriAutomation.data.entities.Sensor;
+import org.STPP.AgriAutomation.data.entities.Users;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -18,16 +26,36 @@ public class DataSeeder implements CommandLineRunner {
     private final PCSRepository pcsRepository;
     private final SensorRepository sensorRepository;
     private final PlantRepository plantRepository;
+    private final RoleRepository roleRepository;
+    private final UserRepo userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public DataSeeder(PCSRepository pcsRepository, SensorRepository sensorRepository, PlantRepository plantRepository) {
+    @Autowired
+    public DataSeeder(PCSRepository pcsRepository,
+                      SensorRepository sensorRepository,
+                      PlantRepository plantRepository,
+                      RoleRepository roleRepository,
+                      UserRepo userRepository) {
         this.pcsRepository = pcsRepository;
         this.sensorRepository = sensorRepository;
         this.plantRepository = plantRepository;
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = new BCryptPasswordEncoder(12);
     }
 
     @Override
     public void run(String... args) throws Exception {
-        // Check if data already exists to avoid duplication
+        seedPlantCareSystemsAndSensors();
+        seedRoles();
+        seedUsers();
+    }
+
+    /**
+     * Seeds PlantCareSystems, Sensors, and Plants.
+     */
+    private void seedPlantCareSystemsAndSensors() {
+        // Check if PlantCareSystems already exist
         if (pcsRepository.count() == 0) {
             // Create PlantCareSystems
             PlantCareSystem greenhouseSystem = new PlantCareSystem("Greenhouse System", "Automated greenhouse control system");
@@ -75,7 +103,7 @@ public class DataSeeder implements CommandLineRunner {
             humiditySensorVF.setTemperature(21);
             humiditySensorVF.setHumidity(55);
 
-            sensorRepository.saveAll(List.of(
+            sensorRepository.saveAll(Arrays.asList(
                     tempSensorGH, humiditySensorGH, lightSensorGH,
                     tempSensorOD, soilMoistureSensorOD,
                     tempSensorVF, humiditySensorVF
@@ -119,15 +147,82 @@ public class DataSeeder implements CommandLineRunner {
             kalePlant.setGrowthStage("Vegetative");
             kalePlant.setSensor(humiditySensorVF);
 
-            plantRepository.saveAll(List.of(
+            plantRepository.saveAll(Arrays.asList(
                     tomatoPlant, lettucePlant, basilPlant,
                     pumpkinPlant, carrotPlant,
                     spinachPlant, kalePlant
             ));
 
-            System.out.println("Sample data seeded successfully.");
+            System.out.println("PlantCareSystems, Sensors, and Plants seeded successfully.");
         } else {
-            System.out.println("Data already exists. Skipping seeding.");
+            System.out.println("PlantCareSystems already exist. Skipping seeding for systems, sensors, and plants.");
+        }
+    }
+
+    /**
+     * Seeds roles into the database.
+     */
+    private void seedRoles() {
+        List<String> roles = Arrays.asList("USER", "ADMIN");
+
+        for (String roleName : roles) {
+            Role role = roleRepository.findByName(roleName);
+            if (role == null) {
+                role = new Role(roleName);
+                roleRepository.save(role);
+                System.out.println("Role '" + roleName + "' created.");
+            } else {
+                System.out.println("Role '" + roleName + "' already exists. Skipping creation.");
+            }
+        }
+    }
+
+    /**
+     * Seeds two users: one simple user and one admin.
+     */
+    private void seedUsers() {
+        // Create Simple User
+        String simpleUsername = "simpleUser";
+        String simplePassword = "password123"; // In production, use a more secure password
+        if (userRepository.findByUsername(simpleUsername) == null) {
+            Users simpleUser = new Users();
+            simpleUser.setUsername(simpleUsername);
+            simpleUser.setPassword(passwordEncoder.encode(simplePassword));
+
+            Role userRole = roleRepository.findByName("USER");
+            if (userRole == null) {
+                System.out.println("USER role not found. Creating USER role.");
+                userRole = new Role("USER");
+                roleRepository.save(userRole);
+            }
+
+            simpleUser.setRoles(new HashSet<>(List.of(userRole)));
+            userRepository.save(simpleUser);
+            System.out.println("Simple user '" + simpleUsername + "' created.");
+        } else {
+            System.out.println("Simple user '" + simpleUsername + "' already exists. Skipping creation.");
+        }
+
+        // Create Admin User
+        String adminUsername = "adminUser";
+        String adminPassword = "adminPass123"; // In production, use a more secure password
+        if (userRepository.findByUsername(adminUsername) == null) {
+            Users adminUser = new Users();
+            adminUser.setUsername(adminUsername);
+            adminUser.setPassword(passwordEncoder.encode(adminPassword));
+
+            Role adminRole = roleRepository.findByName("ADMIN");
+            if (adminRole == null) {
+                System.out.println("ADMIN role not found. Creating ADMIN role.");
+                adminRole = new Role("ADMIN");
+                roleRepository.save(adminRole);
+            }
+
+            adminUser.setRoles(new HashSet<>(List.of(adminRole)));
+            userRepository.save(adminUser);
+            System.out.println("Admin user '" + adminUsername + "' created.");
+        } else {
+            System.out.println("Admin user '" + adminUsername + "' already exists. Skipping creation.");
         }
     }
 }

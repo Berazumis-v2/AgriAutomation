@@ -1,11 +1,10 @@
 package org.STPP.AgriAutomation.api.repositories;
 
-import org.STPP.AgriAutomation.data.entities.Users;
+import org.STPP.AgriAutomation.data.entities.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-
 @Repository
-public interface UserRepo extends JpaRepository<Users, Long> {
-    Users findByUsername(String username);
+public interface RoleRepository extends JpaRepository<Role, Long> {
+    Role findByName(String name);
 }

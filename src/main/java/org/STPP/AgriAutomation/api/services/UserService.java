@@ -1,6 +1,7 @@
 package org.STPP.AgriAutomation.api.services;
 
 import org.STPP.AgriAutomation.api.repositories.UserRepo;
+import org.STPP.AgriAutomation.data.entities.UserPrincipal;
 import org.STPP.AgriAutomation.data.entities.Users;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,9 +32,12 @@ public class UserService {
     }
 
     public String verify(Users user) {
-        Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+        Authentication authentication = authManager.authenticate(
+            new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+        );
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(user.getUsername());
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            return jwtService.generateToken(userPrincipal);
         } else {
             return "fail";
         }
