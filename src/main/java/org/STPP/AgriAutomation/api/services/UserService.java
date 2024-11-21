@@ -1,24 +1,22 @@
 package org.STPP.AgriAutomation.api.services;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import org.STPP.AgriAutomation.api.repositories.RoleRepository;
 import org.STPP.AgriAutomation.api.repositories.UserRepo;
+import org.STPP.AgriAutomation.data.dtos.auth.AuthResponse;
 import org.STPP.AgriAutomation.data.dtos.auth.LoginRequest;
 import org.STPP.AgriAutomation.data.dtos.auth.RegisterRequest;
+import org.STPP.AgriAutomation.data.entities.RefreshToken;
 import org.STPP.AgriAutomation.data.entities.Role;
 import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
 
 @Service
 public class UserService {
@@ -29,10 +27,10 @@ public class UserService {
     private JWTService jwtService;
 
     @Autowired
-    private AuthenticationManager authManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    private UserRepo repo;
+    private UserRepo userRepo;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -40,56 +38,101 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    @Transactional
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
     public User register(RegisterRequest registerRequest) {
-        // Check if username already exists
-        if (repo.findByUsername(registerRequest.getUsername()) != null) {
-            logger.warn("Attempt to register with existing username: {}", registerRequest.getUsername());
-            throw new RuntimeException("Username is already taken");
+        if (userRepo.findByUsername(registerRequest.getUsername()) != null) {
+            throw new RuntimeException("Username already taken");
         }
 
-        // Fetch the USER role from the database
-        Optional<Role> userRoleOptional = roleRepository.findByName("USER");
-        if (!userRoleOptional.isPresent()) {
-            logger.error("USER role not found in the database");
-            throw new RuntimeException("USER role not found");
-        }
-        Role userRole = userRoleOptional.get();
-
-        // Create the User entity
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        // Assign default role, e.g., "USER"
+        Role userRole = new Role("ROLE_USER");
+        user.getRoles().add(userRole);
 
-        // Assign the USER role
-        Set<Role> roles = new HashSet<>();
-        roles.add(userRole);
-        user.setRoles(roles);
-
-        // Save the user to the database
-        repo.save(user);
-        logger.info("User registered successfully: {}", user.getUsername());
-        return user;
+        return userRepo.save(user);
     }
 
 
-    public String verify(LoginRequest loginRequest) {
+    // public String verify(LoginRequest loginRequest) {
+    //     try {
+    //         Authentication authentication = authManager.authenticate(
+    //                 new UsernamePasswordAuthenticationToken(
+    //                         loginRequest.getUsername(),
+    //                         loginRequest.getPassword()
+    //                 )
+    //         );
+
+    //         if (authentication.isAuthenticated()) {
+    //             User user = (User) authentication.getPrincipal();
+    //             return jwtService.generateToken(user);
+    //         }
+    //     } catch (AuthenticationException e) {
+    //         // Log authentication failure
+    //         logger.warn("Authentication failed for user: {}", loginRequest.getUsername());
+    //     }
+    //     return "fail";
+    // }
+
+    public AuthResponse login(LoginRequest loginRequest) {
         try {
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword()
+                )
             );
 
-            if (authentication.isAuthenticated()) {
-                User user = (User) authentication.getPrincipal();
-                return jwtService.generateToken(user);
-            }
-        } catch (AuthenticationException e) {
-            // Log authentication failure
-            logger.warn("Authentication failed for user: {}", loginRequest.getUsername());
+            User user = (User) authentication.getPrincipal();
+
+            String accessToken = jwtService.generateAccessToken(user);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+            return new AuthResponse(accessToken, refreshToken.getToken());
+        } catch (BadCredentialsException e) {
+            throw new RuntimeException("Invalid username or password");
         }
-        return "fail";
+    }
+
+    public String refreshAccessToken(String refreshToken) {
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenService.findByToken(refreshToken);
+
+        if (!optionalRefreshToken.isPresent()) {
+            throw new RuntimeException("Refresh token not found");
+        }
+
+        RefreshToken token = refreshTokenService.verifyExpiration(optionalRefreshToken.get());
+
+        User user = token.getUser();
+        return jwtService.generateAccessToken(user);
+    }
+
+    public String rotateRefreshToken(String refreshToken) {
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenService.findByToken(refreshToken);
+
+        if (!optionalRefreshToken.isPresent()) {
+            throw new RuntimeException("Refresh token not found");
+        }
+
+        RefreshToken token = optionalRefreshToken.get();
+
+        // Revoke the old refresh token
+        refreshTokenService.revokeToken(token);
+
+        // Create a new refresh token
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(token.getUser());
+
+        return newRefreshToken.getToken();
+    }
+
+    public void logout(String refreshToken) {
+        Optional<RefreshToken> optionalRefreshToken = refreshTokenService.findByToken(refreshToken);
+
+        if (optionalRefreshToken.isPresent()) {
+            refreshTokenService.revokeToken(optionalRefreshToken.get());
+        }
     }
 }
