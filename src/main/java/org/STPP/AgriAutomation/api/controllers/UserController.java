@@ -13,9 +13,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/auth/")
 public class UserController {
 
     @Autowired
@@ -29,15 +31,15 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Validated @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<AuthResponse> login(@Validated @RequestBody LoginRequest loginRequest) {
         AuthResponse authResponse = service.login(loginRequest);
 
         // Create HttpOnly cookie for refresh token
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(false) // Set to true in production
-                .path("/refresh-token")
-                .maxAge(2592000) // 30 days in seconds
+                .secure(true) // Set to true in production
+                .path("/auth")
+                .maxAge(3 * 24 * 60 * 60) // 3 days in seconds
                 .sameSite("Strict")
                 .build();
 
@@ -48,30 +50,30 @@ public class UserController {
 
     @PostMapping("/refresh-token")
     public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refreshToken") String refreshToken) {
-        String newAccessToken = service.refreshAccessToken(refreshToken);
-        String newRefreshToken = service.rotateRefreshToken(refreshToken);
+        AuthResponse authResponse = service.refreshAccessToken(refreshToken);
 
         // Create new HttpOnly cookie for new refresh token
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
                 .secure(true) // Set to true in production
-                .path("/refresh-token")
-                .maxAge(2592000) // 30 days in seconds
+                .path("/auth")
+                .maxAge(3 * 24 * 60 * 60) // 3 days in seconds
                 .sameSite("Strict")
                 .build();
 
         return ResponseEntity.ok()
                 .header("Set-Cookie", cookie.toString())
-                .body(new AuthResponse(newAccessToken, null));
+                .body(new AuthResponse(authResponse.getAccessToken(), null));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@CookieValue(name = "refreshToken") String refreshToken) {
         service.logout(refreshToken);
+        // Clear the refresh token cookie
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true) // Set to true in production
-                .path("/refresh-token")
+                .path("/auth")
                 .maxAge(0)
                 .sameSite("Strict")
                 .build();

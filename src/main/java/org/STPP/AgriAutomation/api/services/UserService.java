@@ -1,14 +1,16 @@
 package org.STPP.AgriAutomation.api.services;
 
+import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.STPP.AgriAutomation.api.repositories.RoleRepository;
 import org.STPP.AgriAutomation.api.repositories.UserRepo;
 import org.STPP.AgriAutomation.data.dtos.auth.AuthResponse;
 import org.STPP.AgriAutomation.data.dtos.auth.LoginRequest;
 import org.STPP.AgriAutomation.data.dtos.auth.RegisterRequest;
-import org.STPP.AgriAutomation.data.entities.RefreshToken;
 import org.STPP.AgriAutomation.data.entities.Role;
+import org.STPP.AgriAutomation.data.entities.Session;
 import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,8 +22,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private JWTService jwtService;
@@ -39,43 +39,23 @@ public class UserService {
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    private RefreshTokenService refreshTokenService;
+    private SessionService sessionService;
 
     public User register(RegisterRequest registerRequest) {
-        if (userRepo.findByUsername(registerRequest.getUsername()) != null) {
+        if (userRepo.findByUsername(registerRequest.getUsername()).isPresent()) {
             throw new RuntimeException("Username already taken");
         }
 
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        // Assign default role, e.g., "USER"
-        Role userRole = new Role("ROLE_USER");
+        // Assign default role, e.g., "ROLE_USER"
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Role not found"));
         user.getRoles().add(userRole);
 
         return userRepo.save(user);
     }
-
-
-    // public String verify(LoginRequest loginRequest) {
-    //     try {
-    //         Authentication authentication = authManager.authenticate(
-    //                 new UsernamePasswordAuthenticationToken(
-    //                         loginRequest.getUsername(),
-    //                         loginRequest.getPassword()
-    //                 )
-    //         );
-
-    //         if (authentication.isAuthenticated()) {
-    //             User user = (User) authentication.getPrincipal();
-    //             return jwtService.generateToken(user);
-    //         }
-    //     } catch (AuthenticationException e) {
-    //         // Log authentication failure
-    //         logger.warn("Authentication failed for user: {}", loginRequest.getUsername());
-    //     }
-    //     return "fail";
-    // }
 
     public AuthResponse login(LoginRequest loginRequest) {
         try {
@@ -88,51 +68,53 @@ public class UserService {
 
             User user = (User) authentication.getPrincipal();
 
-            String accessToken = jwtService.generateAccessToken(user);
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+            // Create session
+            Instant refreshTokenExpiry = Instant.now().plusSeconds(3 * 24 * 60 * 60); // 3 days
+            Session session = sessionService.createSession(user.getId().toString(), refreshTokenExpiry);
+            UUID sessionId = session.getSessionId();
 
-            return new AuthResponse(accessToken, refreshToken.getToken());
+            // Generate tokens
+            String accessToken = jwtService.generateAccessToken(user);
+            String refreshToken = jwtService.generateRefreshToken(user.getUsername(), sessionId);
+
+            return new AuthResponse(accessToken, refreshToken);
         } catch (BadCredentialsException e) {
             throw new RuntimeException("Invalid username or password");
         }
     }
 
-    public String refreshAccessToken(String refreshToken) {
-        Optional<RefreshToken> optionalRefreshToken = refreshTokenService.findByToken(refreshToken);
-
-        if (!optionalRefreshToken.isPresent()) {
-            throw new RuntimeException("Refresh token not found");
+    public AuthResponse refreshAccessToken(String refreshToken) {
+        if (!jwtService.validateToken(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
         }
 
-        RefreshToken token = refreshTokenService.verifyExpiration(optionalRefreshToken.get());
+        String username = jwtService.extractUsername(refreshToken);
+        UUID sessionId = jwtService.extractSessionId(refreshToken);
 
-        User user = token.getUser();
-        return jwtService.generateAccessToken(user);
-    }
-
-    public String rotateRefreshToken(String refreshToken) {
-        Optional<RefreshToken> optionalRefreshToken = refreshTokenService.findByToken(refreshToken);
-
-        if (!optionalRefreshToken.isPresent()) {
-            throw new RuntimeException("Refresh token not found");
+        if (!sessionService.isSessionValid(sessionId)) {
+            throw new RuntimeException("Session is invalid or expired");
         }
 
-        RefreshToken token = optionalRefreshToken.get();
+        User user = userRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Revoke the old refresh token
-        refreshTokenService.revokeToken(token);
+        // Generate new tokens
+        String newAccessToken = jwtService.generateAccessToken(user);
+        String newRefreshToken = jwtService.generateRefreshToken(user.getUsername(), sessionId);
 
-        // Create a new refresh token
-        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(token.getUser());
+        // Extend session expiry
+        Instant newExpiry = Instant.now().plusSeconds(3 * 24 * 60 * 60); // 3 days
+        sessionService.extendSession(sessionId, newExpiry);
 
-        return newRefreshToken.getToken();
+        return new AuthResponse(newAccessToken, newRefreshToken);
     }
 
     public void logout(String refreshToken) {
-        Optional<RefreshToken> optionalRefreshToken = refreshTokenService.findByToken(refreshToken);
-
-        if (optionalRefreshToken.isPresent()) {
-            refreshTokenService.revokeToken(optionalRefreshToken.get());
+        if (!jwtService.validateToken(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
         }
+
+        UUID sessionId = jwtService.extractSessionId(refreshToken);
+        sessionService.revokeSession(sessionId);
     }
 }

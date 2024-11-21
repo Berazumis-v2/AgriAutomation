@@ -1,28 +1,23 @@
 package org.STPP.AgriAutomation.api.services;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 
 @Service
 public class JWTService {
@@ -30,18 +25,15 @@ public class JWTService {
     @Value("${app.jwtSecret}")
     private String secretKey;
 
-    @Value("${app.jwtExpirationMs}")
-    private Long jwtExpirationMs;
+    @Value("${app.jwtAccessExpirationMs}")
+    private Long jwtAccessExpirationMs;
 
-    @PostConstruct
-    public void init() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey sk = keyGen.generateKey();
-            secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error generating secret key for JWT", e);
-        }
+    @Value("${app.jwtRefreshExpirationMs}")
+    private Long jwtRefreshExpirationMs;
+
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateAccessToken(User user) {
@@ -49,61 +41,56 @@ public class JWTService {
         claims.put("userId", user.getId());
         claims.put("roles", user.getAuthorities()
                                 .stream()
-                                .map(GrantedAuthority::getAuthority)
+                                .map(auth -> auth.getAuthority())
                                 .collect(Collectors.toList()));
         return Jwts.builder()
-                .setHeaderParam("typ", "JWT")
                 .setClaims(claims)
                 .setSubject(user.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs)) // e.g., 20 minutes
-                .signWith(getKey())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtAccessExpirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-
-    private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public String generateRefreshToken(String username, UUID sessionId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sessionId", sessionId.toString());
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtRefreshExpirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public String extractUserName(String token) {
-        return extractClaim(token, Claims::getSubject);
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            // Log token validation errors if necessary
+            return false;
+        }
     }
 
-    public Long extractUserId(String token) {
-        Claims claims = extractAllClaims(token);
-        return claims.get("userId", Long.class);
+    public String extractUsername(String token) {
+        return extractAllClaims(token).getSubject();
     }
 
-    public List<String> extractRoles(String token) {
-        Claims claims = extractAllClaims(token);
-        return claims.get("roles", List.class);
-    }
-
-    private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimResolver.apply(claims);
+    public UUID extractSessionId(String token) {
+        String sessionIdStr = (String) extractAllClaims(token).get("sessionId");
+        return UUID.fromString(sessionIdStr);
     }
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(getKey())
+                .setSigningKey(getSigningKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

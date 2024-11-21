@@ -178,6 +178,8 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    
+
     /**
      * Seeds two users: one simple user and one admin.
      */
@@ -185,7 +187,7 @@ public class DataSeeder implements CommandLineRunner {
         // Create Simple User
         String simpleUsername = "simpleUser";
         String simplePassword = "password123"; // In production, use a more secure password
-        Optional<User> existingSimpleUser = Optional.ofNullable(userRepository.findByUsername(simpleUsername));
+        Optional<User> existingSimpleUser = userRepository.findByUsername(simpleUsername);
 
         if (!existingSimpleUser.isPresent()) {
             User simpleUser = new User();
@@ -210,7 +212,7 @@ public class DataSeeder implements CommandLineRunner {
         // Create Admin User
         String adminUsername = "adminUser";
         String adminPassword = "adminPass123"; // In production, use a more secure password
-        Optional<User> existingAdminUser = Optional.ofNullable(userRepository.findByUsername(adminUsername));
+        Optional<User> existingAdminUser =userRepository.findByUsername(adminUsername);
 
         if (!existingAdminUser.isPresent()) {
             User adminUser = new User();
