@@ -1,14 +1,14 @@
 package org.STPP.AgriAutomation.data.dtos.auth;
 
-import org.STPP.AgriAutomation.data.entities.Users;
+import org.STPP.AgriAutomation.data.entities.User;
 
 public class RegisterRequest {
     private String username;
 
     private String password;
 
-    public Users toEntity() {
-        Users user = new Users();
+    public User toEntity() {
+        User user = new User();
         user.setUsername(username);
         user.setPassword(password);
         return user;

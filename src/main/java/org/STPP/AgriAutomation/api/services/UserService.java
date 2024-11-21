@@ -9,8 +9,7 @@ import org.STPP.AgriAutomation.api.repositories.UserRepo;
 import org.STPP.AgriAutomation.data.dtos.auth.LoginRequest;
 import org.STPP.AgriAutomation.data.dtos.auth.RegisterRequest;
 import org.STPP.AgriAutomation.data.entities.Role;
-import org.STPP.AgriAutomation.data.entities.UserPrincipal;
-import org.STPP.AgriAutomation.data.entities.Users;
+import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +29,7 @@ public class UserService {
     private JWTService jwtService;
 
     @Autowired
-    AuthenticationManager authManager;
+    private AuthenticationManager authManager;
 
     @Autowired
     private UserRepo repo;
@@ -42,7 +41,7 @@ public class UserService {
     private BCryptPasswordEncoder passwordEncoder;
 
     @Transactional
-    public Users register(RegisterRequest registerRequest) {
+    public User register(RegisterRequest registerRequest) {
         // Check if username already exists
         if (repo.findByUsername(registerRequest.getUsername()) != null) {
             logger.warn("Attempt to register with existing username: {}", registerRequest.getUsername());
@@ -57,8 +56,8 @@ public class UserService {
         }
         Role userRole = userRoleOptional.get();
 
-        // Create the Users entity
-        Users user = new Users();
+        // Create the User entity
+        User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
@@ -84,11 +83,12 @@ public class UserService {
             );
 
             if (authentication.isAuthenticated()) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                return jwtService.generateToken(userPrincipal);
+                User user = (User) authentication.getPrincipal();
+                return jwtService.generateToken(user);
             }
         } catch (AuthenticationException e) {
             // Log authentication failure
+            logger.warn("Authentication failed for user: {}", loginRequest.getUsername());
         }
         return "fail";
     }

@@ -4,7 +4,7 @@ import org.STPP.AgriAutomation.api.services.UserService;
 import org.STPP.AgriAutomation.data.dtos.auth.AuthResponse;
 import org.STPP.AgriAutomation.data.dtos.auth.LoginRequest;
 import org.STPP.AgriAutomation.data.dtos.auth.RegisterRequest;
-import org.STPP.AgriAutomation.data.entities.Users;
+import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +21,8 @@ public class UserController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<Users> register(@Validated @RequestBody RegisterRequest registerRequest) {
-        Users user = service.register(registerRequest);
+    public ResponseEntity<User> register(@Validated @RequestBody RegisterRequest registerRequest) {
+        User user = service.register(registerRequest);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 

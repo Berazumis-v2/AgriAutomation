@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import org.STPP.AgriAutomation.data.entities.UserPrincipal;
+import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -21,37 +21,37 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class JWTService {
 
-
     private String secretkey = "";
 
-    public JWTService() {
-
+    @PostConstruct
+    public void init() {
         try {
             KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
             SecretKey sk = keyGen.generateKey();
             secretkey = Base64.getEncoder().encodeToString(sk.getEncoded());
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error generating secret key for JWT", e);
         }
     }
 
-    public String generateToken(UserPrincipal userPrincipal) {
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userPrincipal.getId());
-        claims.put("roles", userPrincipal.getAuthorities()
+        claims.put("userId", user.getId());
+        claims.put("roles", user.getAuthorities()
                             .stream()
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.toList()));
         return Jwts.builder()
                 .setHeaderParam("typ", "JWT")
                 .setClaims(claims)
-                .subject(userPrincipal.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // 30 minutes
+                .setSubject(user.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // 30 minutes
                 .signWith(getKey())
                 .compact();
     }
@@ -100,5 +100,4 @@ public class JWTService {
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
 }

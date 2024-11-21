@@ -15,7 +15,7 @@ import org.STPP.AgriAutomation.data.entities.Plant;
 import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
 import org.STPP.AgriAutomation.data.entities.Role;
 import org.STPP.AgriAutomation.data.entities.Sensor;
-import org.STPP.AgriAutomation.data.entities.Users;
+import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -185,10 +185,10 @@ public class DataSeeder implements CommandLineRunner {
         // Create Simple User
         String simpleUsername = "simpleUser";
         String simplePassword = "password123"; // In production, use a more secure password
-        Optional<Users> existingSimpleUser = Optional.ofNullable(userRepository.findByUsername(simpleUsername));
+        Optional<User> existingSimpleUser = Optional.ofNullable(userRepository.findByUsername(simpleUsername));
 
         if (!existingSimpleUser.isPresent()) {
-            Users simpleUser = new Users();
+            User simpleUser = new User();
             simpleUser.setUsername(simpleUsername);
             simpleUser.setPassword(passwordEncoder.encode(simplePassword));
 
@@ -210,10 +210,10 @@ public class DataSeeder implements CommandLineRunner {
         // Create Admin User
         String adminUsername = "adminUser";
         String adminPassword = "adminPass123"; // In production, use a more secure password
-        Optional<Users> existingAdminUser = Optional.ofNullable(userRepository.findByUsername(adminUsername));
+        Optional<User> existingAdminUser = Optional.ofNullable(userRepository.findByUsername(adminUsername));
 
         if (!existingAdminUser.isPresent()) {
-            Users adminUser = new Users();
+            User adminUser = new User();
             adminUser.setUsername(adminUsername);
             adminUser.setPassword(passwordEncoder.encode(adminPassword));
 
