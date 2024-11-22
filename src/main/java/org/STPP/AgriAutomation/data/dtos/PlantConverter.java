@@ -1,20 +1,25 @@
 package org.STPP.AgriAutomation.data.dtos;
 
-import org.STPP.AgriAutomation.data.entities.Plant;
-import org.STPP.AgriAutomation.data.dtos.PlantRequestDTO;
-import org.STPP.AgriAutomation.data.dtos.PlantResponseDTO;
-
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.STPP.AgriAutomation.data.entities.Plant;
+import org.STPP.AgriAutomation.data.entities.Sensor;
+import org.STPP.AgriAutomation.data.entities.User;
 
 public class PlantConverter {
 
     public static PlantResponseDTO convertToResponseDTO(Plant plant) {
+        UserDTO userDTO = new UserDTO(
+                plant.getCreatedBy().getUsername()
+        );
+
         return new PlantResponseDTO(
                 plant.getId(),
                 plant.getName(),
                 plant.getGrowthStage(),
-                plant.getSensor().getId()
+                plant.getSensor().getId(),
+                userDTO
         );
     }
 
@@ -24,10 +29,12 @@ public class PlantConverter {
                 .collect(Collectors.toList());
     }
 
-    public static Plant convertToEntity(PlantRequestDTO dto) {
+    public static Plant convertToEntity(PlantRequestDTO dto, Sensor sensor, User createdBy) {
         Plant plant = new Plant();
         plant.setName(dto.getName());
         plant.setGrowthStage(dto.getGrowthStage());
+        plant.setSensor(sensor);
+        plant.setCreatedBy(createdBy);
         return plant;
     }
 }

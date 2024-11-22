@@ -1,25 +1,35 @@
 package org.STPP.AgriAutomation.api.controllers;
 
-import org.STPP.AgriAutomation.data.entities.Sensor;
-import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
-import org.STPP.AgriAutomation.data.dtos.SensorRequestDTO;
-import org.STPP.AgriAutomation.data.dtos.SensorResponseDTO;
-import org.STPP.AgriAutomation.api.services.SensorService;
-import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
-import org.STPP.AgriAutomation.data.dtos.SensorConverter;
-import org.STPP.AgriAutomation.api.exceptions.ResourceNotFoundException;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
+import org.STPP.AgriAutomation.api.exceptions.ResourceNotFoundException;
+import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
+import org.STPP.AgriAutomation.api.services.SensorService;
+import org.STPP.AgriAutomation.api.services.UserService;
+import org.STPP.AgriAutomation.data.dtos.SensorConverter;
+import org.STPP.AgriAutomation.data.dtos.SensorRequestDTO;
+import org.STPP.AgriAutomation.data.dtos.SensorResponseDTO;
+import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
+import org.STPP.AgriAutomation.data.entities.Role;
+import org.STPP.AgriAutomation.data.entities.Sensor;
+import org.STPP.AgriAutomation.data.entities.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/plantcaresystems/{plantcaresystemId}/sensors")
@@ -28,10 +38,12 @@ public class SensorController {
 
     private final SensorService sensorService;
     private final PlantCareSystemService plantCareSystemService;
+    private final UserService userService; // New dependency
 
-    public SensorController(SensorService sensorService, PlantCareSystemService plantCareSystemService) {
+    public SensorController(SensorService sensorService, PlantCareSystemService plantCareSystemService, UserService userService) {
         this.sensorService = sensorService;
         this.plantCareSystemService = plantCareSystemService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -69,9 +81,13 @@ public class SensorController {
         PlantCareSystem plantCareSystem = plantCareSystemService.findById(plantcaresystemId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", plantcaresystemId));
 
-        Sensor sensor = SensorConverter.convertToEntity(requestDTO);
-        sensor.setPlantCareSystem(plantCareSystem);
+        // Retrieve the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
 
+        Sensor sensor = SensorConverter.convertToEntity(requestDTO, plantCareSystem, currentUser);
         Sensor savedSensor = sensorService.save(sensor);
 
         SensorResponseDTO responseDTO = SensorConverter.convertToResponseDTO(savedSensor);
@@ -81,7 +97,7 @@ public class SensorController {
         return ResponseEntity.created(location).body(responseDTO);
     }
 
-    @PutMapping("/{sensorId}")
+     @PutMapping("/{sensorId}")
     public ResponseEntity<SensorResponseDTO> updateById(
             @PathVariable int plantcaresystemId,
             @PathVariable int sensorId,
@@ -97,6 +113,19 @@ public class SensorController {
             throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
         }
 
+        // Retrieve the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
+
+        // Check if the user is the creator or has admin role
+        if (!existingSensor.getCreatedBy().getId().equals(currentUser.getId()) &&
+            !currentUser.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ADMIN))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Proceed with the update
         existingSensor.setModel(requestDTO.getModel());
         existingSensor.setTemperature(requestDTO.getTemperature());
         existingSensor.setHumidity(requestDTO.getHumidity());
@@ -118,6 +147,18 @@ public class SensorController {
 
         if (existingSensor.getPlantCareSystem() == null || existingSensor.getPlantCareSystem().getId() != plantcaresystemId) {
             throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
+        }
+
+        // Retrieve the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
+
+        // Check if the user is the creator or has admin role
+        if (!existingSensor.getCreatedBy().getId().equals(currentUser.getId()) &&
+            !currentUser.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ADMIN))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         sensorService.deleteById(sensorId);

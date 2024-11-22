@@ -1,8 +1,7 @@
 package org.STPP.AgriAutomation.api.services;
 
 import org.STPP.AgriAutomation.api.repositories.UserRepo;
-import org.STPP.AgriAutomation.data.entities.UserPrincipal;
-import org.STPP.AgriAutomation.data.entities.Users;
+import org.STPP.AgriAutomation.data.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,12 +17,13 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Users user = userRepo.findByUsername(username);
+        User user = userRepo.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         if (user == null) {
-            System.out.println("User Not Found");
-            throw new UsernameNotFoundException("user not found");
+            // It's better to use a logger instead of System.out.println
+            // logger.warn("User not found: {}", username);
+            throw new UsernameNotFoundException("User not found with username: " + username);
         }
         
-        return new UserPrincipal(user);
+        return user; // Since User implements UserDetails
     }
 }

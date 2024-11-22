@@ -1,7 +1,8 @@
 package org.STPP.AgriAutomation.data.dtos;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class SensorResponseDTO {
 
@@ -18,10 +19,12 @@ public class SensorResponseDTO {
 
     private int plantCareSystemId;
 
+    private UserDTO createdBy;
+
     public SensorResponseDTO() {}
 
     public SensorResponseDTO(int id, String model, int temperature, int humidity, LocalDateTime readingTimestamp,
-                             LocalDateTime calibrationTimestamp, int plantCareSystemId) {
+                             LocalDateTime calibrationTimestamp, int plantCareSystemId, UserDTO createdBy) {
         this.id = id;
         this.model = model;
         this.temperature = temperature;
@@ -29,6 +32,7 @@ public class SensorResponseDTO {
         this.readingTimestamp = readingTimestamp;
         this.calibrationTimestamp = calibrationTimestamp;
         this.plantCareSystemId = plantCareSystemId;
+        this.createdBy = createdBy;
     }
 
     // Getters and Setters
@@ -87,5 +91,13 @@ public class SensorResponseDTO {
 
     public void setPlantCareSystemId(int plantCareSystemId) {
         this.plantCareSystemId = plantCareSystemId;
+    }
+
+    public UserDTO getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(UserDTO createdBy) {
+        this.createdBy = createdBy;
     }
 }

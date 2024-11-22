@@ -7,13 +7,16 @@ public class PlantResponseDTO {
     private String growthStage;
     private int sensorId;
 
+    private UserDTO createdBy;
+
     public PlantResponseDTO() {}
 
-    public PlantResponseDTO(int id, String name, String growthStage, int sensorId) {
+    public PlantResponseDTO(int id, String name, String growthStage, int sensorId, UserDTO createdBy) {
         this.id = id;
         this.name = name;
         this.growthStage = growthStage;
         this.sensorId = sensorId;
+        this.createdBy = createdBy;
     }
 
     public int getId() {
@@ -46,5 +49,13 @@ public class PlantResponseDTO {
 
     public void setSensorId(int sensorId) {
         this.sensorId = sensorId;
+    }
+
+    public UserDTO getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(UserDTO createdBy) {
+        this.createdBy = createdBy;
     }
 }

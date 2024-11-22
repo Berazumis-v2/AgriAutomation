@@ -1,8 +1,11 @@
 package org.STPP.AgriAutomation.data.entities;
 
-import java.util.List;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Plant {
@@ -18,6 +21,10 @@ public class Plant {
     @ManyToOne
     @JoinColumn(name = "sensor_id", nullable = false)
     private Sensor sensor;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User createdBy;
 
     public Plant() {}
 
@@ -40,4 +47,8 @@ public class Plant {
     public String getGrowthStage() {return growthStage;}
 
     public void setGrowthStage(String growthStage) {this.growthStage = growthStage;}
+
+    public User getCreatedBy() {return createdBy;}
+
+    public void setCreatedBy(User createdBy) {this.createdBy = createdBy;}
 }
