@@ -330,6 +330,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
+              examples:
+                SuccessfulLogin:
+                  summary: Successful login response
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwidXNlcklkIjoxLCJzdWIiOiJzaW1wbGVVc2VyIiwiaWF0IjoxNzMyMjQ3NTkyLCJleHAiOjE3MzIyNTExOTJ9.vUcGE3-9HKgAwRtAjvxWOg9CQTqlmVWqEoUorAisL0I"
+                    refreshToken: "Cookie set"
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -402,7 +408,10 @@ paths:
             application/json:
               schema:
                 type: string
-                example: "Logged out successfully"
+              examples:
+                LogoutSuccess:
+                  summary: Successful logout message
+                  value: "Logged out successfully"
 
   /plantcaresystems:
     get:
@@ -421,6 +430,24 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PlantCareSystemResponse'
+              examples:
+                PlantCareSystemsList:
+                  summary: List of plant care systems
+                  value:
+                    - id: 1
+                      name: "Greenhouse System"
+                      description: "Automated greenhouse control system"
+                      automationEnabled: true
+                      maintenanceTimeStamp: "2024-04-01T10:00:00"
+                      createdBy:
+                        username: "simpleUser"
+                    - id: 2
+                      name: "Outdoor System"
+                      description: "Outdoor plant monitoring system"
+                      automationEnabled: false
+                      maintenanceTimeStamp: "2024-03-15T09:30:00"
+                      createdBy:
+                        username: "simpleUser"
         '401':
           description: Unauthorized
     post:
@@ -481,6 +508,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlantCareSystemResponse'
+              examples:
+                SinglePlantCareSystem:
+                  summary: Plant care system details
+                  value:
+                    id: 1
+                    name: "Greenhouse System"
+                    description: "Automated greenhouse control system"
+                    automationEnabled: true
+                    maintenanceTimeStamp: "2024-04-01T10:00:00"
+                    createdBy:
+                      username: "simpleUser"
         '401':
           description: Unauthorized
         '404':
@@ -570,6 +608,28 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SensorResponse'
+              examples:
+                SensorsList:
+                  summary: List of sensors for the plant care system
+                  value:
+                    - id: 1
+                      model: "TempModelGH-100"
+                      temperature: 22
+                      humidity: 55
+                      readingTimestamp: "2024-11-22T05:16:02"
+                      calibrationTimestamp: "2024-11-22T05:16:02"
+                      plantCareSystemId: 1
+                      createdBy:
+                        username: "simpleUser"
+                    - id: 2
+                      model: "HumModelGH-200"
+                      temperature: 23
+                      humidity: 60
+                      readingTimestamp: "2024-11-22T05:16:02"
+                      calibrationTimestamp: "2024-11-22T05:16:02"
+                      plantCareSystemId: 1
+                      createdBy:
+                        username: "simpleUser"
         '401':
           description: Unauthorized
         '404':
@@ -633,6 +693,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SensorResponse'
+              examples:
+                SingleSensor:
+                  summary: Sensor details
+                  value:
+                    id: 1
+                    model: "TempModelGH-100"
+                    temperature: 22
+                    humidity: 55
+                    readingTimestamp: "2024-11-22T05:16:02"
+                    calibrationTimestamp: "2024-11-22T05:16:02"
+                    plantCareSystemId: 1
+                    createdBy:
+                      username: "simpleUser"
         '401':
           description: Unauthorized
         '404':
@@ -723,6 +796,22 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PlantResponse'
+              examples:
+                PlantsList:
+                  summary: List of plants associated with the sensor
+                  value:
+                    - id: 9
+                      name: "Tomato"
+                      growthStage: "Seedling"
+                      sensorId: 1
+                      createdBy:
+                        username: "Ignas"
+                    - id: 10
+                      name: "Tomato"
+                      growthStage: "Seedling"
+                      sensorId: 1
+                      createdBy:
+                        username: "Ignas"
         '401':
           description: Unauthorized
         '404':
@@ -786,6 +875,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlantResponse'
+              examples:
+                SinglePlant:
+                  summary: Plant details
+                  value:
+                    id: 9
+                    name: "Tomato"
+                    growthStage: "Seedling"
+                    sensorId: 1
+                    createdBy:
+                      username: "Ignas"
         '401':
           description: Unauthorized
         '404':
