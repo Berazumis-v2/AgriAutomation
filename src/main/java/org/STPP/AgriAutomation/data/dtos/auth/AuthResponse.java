@@ -9,6 +9,10 @@ public class AuthResponse {
         this.refreshToken = refreshToken;
     }
 
+    public AuthResponse(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
     public String getAccessToken() {
         return accessToken;
     }

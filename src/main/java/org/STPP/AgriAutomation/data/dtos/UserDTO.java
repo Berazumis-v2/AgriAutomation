@@ -1,25 +1,15 @@
 package org.STPP.AgriAutomation.data.dtos;
 
 public class UserDTO {
-    private Long id;
     private String username;
 
     public UserDTO() {}
 
-    public UserDTO(Long id, String username) {
-        this.id = id;
+    public UserDTO( String username) {
         this.username = username;
     }
 
     // Getters and setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;

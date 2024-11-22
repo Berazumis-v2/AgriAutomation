@@ -11,7 +11,6 @@ public class PlantConverter {
 
     public static PlantResponseDTO convertToResponseDTO(Plant plant) {
         UserDTO userDTO = new UserDTO(
-                plant.getCreatedBy().getId(),
                 plant.getCreatedBy().getUsername()
         );
 

@@ -1,15 +1,15 @@
 package org.STPP.AgriAutomation.data.dtos;
 
-import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
-import org.STPP.AgriAutomation.data.entities.User;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
+import org.STPP.AgriAutomation.data.entities.User;
 
 public class PlantCareSystemConverter {
 
     public static PlantCareSystemResponseDTO convertToResponseDTO(PlantCareSystem plantCareSystem) {
         UserDTO userDTO = new UserDTO(
-                plantCareSystem.getCreatedBy().getId(),
                 plantCareSystem.getCreatedBy().getUsername()
         );
 

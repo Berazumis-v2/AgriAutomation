@@ -45,7 +45,7 @@ public class UserController {
 
         return ResponseEntity.ok()
                 .header("Set-Cookie", cookie.toString())
-                .body(new AuthResponse(authResponse.getAccessToken(), null));
+                .body(new AuthResponse(authResponse.getAccessToken(), "Cookie set"));
     }
 
     @PostMapping("/refresh-token")
@@ -63,7 +63,7 @@ public class UserController {
 
         return ResponseEntity.ok()
                 .header("Set-Cookie", cookie.toString())
-                .body(new AuthResponse(authResponse.getAccessToken(), null));
+                .body(new AuthResponse(authResponse.getAccessToken(), "Cookie set"));
     }
 
     @PostMapping("/logout")

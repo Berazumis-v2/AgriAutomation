@@ -11,7 +11,6 @@ public class SensorConverter {
 
     public static SensorResponseDTO convertToResponseDTO(Sensor sensor) {
         UserDTO userDTO = new UserDTO(
-                sensor.getCreatedBy().getId(),
                 sensor.getCreatedBy().getUsername()
         );
 
