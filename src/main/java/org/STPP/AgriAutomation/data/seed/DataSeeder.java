@@ -47,29 +47,122 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        seedPlantCareSystemsAndSensors();
+        // Seed Roles first
         seedRoles();
+
+        // Then seed Users
         seedUsers();
+
+        // Finally, seed PlantCareSystems, Sensors, and Plants
+        seedPlantCareSystemsAndSensors();
+    }
+
+    /**
+     * Seeds roles into the database.
+     */
+    private void seedRoles() {
+        List<String> roles = Arrays.asList("USER", "ADMIN");
+
+        for (String roleName : roles) {
+            Optional<Role> roleOpt = roleRepository.findByName(roleName);
+            if (!roleOpt.isPresent()) {
+                Role role = new Role(roleName);
+                roleRepository.save(role);
+                System.out.printf("Role '%s' created.%n", roleName);
+            } else {
+                System.out.printf("Role '%s' already exists. Skipping creation.%n", roleName);
+            }
+        }
+    }
+
+    /**
+     * Seeds two users: one simple user and one admin.
+     */
+    private void seedUsers() {
+        // Create Simple User
+        String simpleUsername = "simpleUser";
+        String simplePassword = "password123"; // In production, use a more secure password
+        Optional<User> existingSimpleUser = userRepository.findByUsername(simpleUsername);
+
+        if (!existingSimpleUser.isPresent()) {
+            User simpleUser = new User();
+            simpleUser.setUsername(simpleUsername);
+            simpleUser.setPassword(passwordEncoder.encode(simplePassword));
+
+            // Assign the USER role
+            Optional<Role> userRoleOpt = roleRepository.findByName("USER");
+            if (userRoleOpt.isPresent()) {
+                simpleUser.setRoles(new HashSet<>(List.of(userRoleOpt.get())));
+            } else {
+                System.out.printf("USER role not found. Cannot assign role to simple user.%n");
+                return; // Exit if USER role is not present
+            }
+
+            userRepository.save(simpleUser);
+            System.out.printf("Simple user '%s' created.%n", simpleUsername);
+        } else {
+            System.out.printf("Simple user '%s' already exists. Skipping creation.%n", simpleUsername);
+        }
+
+        // Create Admin User
+        String adminUsername = "adminUser";
+        String adminPassword = "adminPass123"; // In production, use a more secure password
+        Optional<User> existingAdminUser = userRepository.findByUsername(adminUsername);
+
+        if (!existingAdminUser.isPresent()) {
+            User adminUser = new User();
+            adminUser.setUsername(adminUsername);
+            adminUser.setPassword(passwordEncoder.encode(adminPassword));
+
+            // Assign the ADMIN role
+            Optional<Role> adminRoleOpt = roleRepository.findByName("ADMIN");
+            if (adminRoleOpt.isPresent()) {
+                adminUser.setRoles(new HashSet<>(List.of(adminRoleOpt.get())));
+            } else {
+                System.out.printf("ADMIN role not found. Cannot assign role to admin user.%n");
+                return; // Exit if ADMIN role is not present
+            }
+
+            userRepository.save(adminUser);
+            System.out.printf("Admin user '%s' created.%n", adminUsername);
+        } else {
+            System.out.printf("Admin user '%s' already exists. Skipping creation.%n", adminUsername);
+        }
     }
 
     /**
      * Seeds PlantCareSystems, Sensors, and Plants.
+     * Assigns the 'createdBy' field to 'simpleUser'.
      */
     private void seedPlantCareSystemsAndSensors() {
         // Check if PlantCareSystems already exist
         if (pcsRepository.count() == 0) {
+            // Retrieve the simpleUser
+            String simpleUsername = "simpleUser";
+            Optional<User> simpleUserOpt = userRepository.findByUsername(simpleUsername);
+
+            if (!simpleUserOpt.isPresent()) {
+                System.out.printf("Simple user '%s' not found. Cannot assign createdBy.%n", simpleUsername);
+                return; // Exit if simpleUser does not exist
+            }
+
+            User simpleUser = simpleUserOpt.get();
+
             // Create PlantCareSystems
             PlantCareSystem greenhouseSystem = new PlantCareSystem("Greenhouse System", "Automated greenhouse control system");
             greenhouseSystem.setAutomationEnabled(true);
             greenhouseSystem.setMaintenanceTimeStamp(LocalDateTime.parse("2024-04-01T10:00:00"));
+            greenhouseSystem.setCreatedBy(simpleUser); // Assign createdBy
 
             PlantCareSystem outdoorSystem = new PlantCareSystem("Outdoor System", "Outdoor plant monitoring system");
             outdoorSystem.setAutomationEnabled(false);
             outdoorSystem.setMaintenanceTimeStamp(LocalDateTime.parse("2024-03-15T09:30:00"));
+            outdoorSystem.setCreatedBy(simpleUser); // Assign createdBy
 
             PlantCareSystem verticalFarmSystem = new PlantCareSystem("Vertical Farm System", "Space-efficient vertical farming system");
             verticalFarmSystem.setAutomationEnabled(true);
             verticalFarmSystem.setMaintenanceTimeStamp(LocalDateTime.parse("2024-05-10T08:45:00"));
+            verticalFarmSystem.setCreatedBy(simpleUser); // Assign createdBy
 
             pcsRepository.saveAll(List.of(greenhouseSystem, outdoorSystem, verticalFarmSystem));
 
@@ -154,84 +247,9 @@ public class DataSeeder implements CommandLineRunner {
                     spinachPlant, kalePlant
             ));
 
-            System.out.println("PlantCareSystems, Sensors, and Plants seeded successfully.");
+            System.out.println("PlantCareSystems, Sensors, and Plants seeded successfully with 'simpleUser' as creator.");
         } else {
             System.out.println("PlantCareSystems already exist. Skipping seeding for systems, sensors, and plants.");
-        }
-    }
-
-    /**
-     * Seeds roles into the database.
-     */
-    private void seedRoles() {
-        List<String> roles = Arrays.asList("USER", "ADMIN");
-
-        for (String roleName : roles) {
-            Optional<Role> roleOpt = roleRepository.findByName(roleName);
-            if (!roleOpt.isPresent()) {
-                Role role = new Role(roleName);
-                roleRepository.save(role);
-                System.out.printf("Role '%s' created.%n", roleName);
-            } else {
-                System.out.printf("Role '{}' already exists. Skipping creation.", roleName);
-            }
-        }
-    }
-
-    
-
-    /**
-     * Seeds two users: one simple user and one admin.
-     */
-    private void seedUsers() {
-        // Create Simple User
-        String simpleUsername = "simpleUser";
-        String simplePassword = "password123"; // In production, use a more secure password
-        Optional<User> existingSimpleUser = userRepository.findByUsername(simpleUsername);
-
-        if (!existingSimpleUser.isPresent()) {
-            User simpleUser = new User();
-            simpleUser.setUsername(simpleUsername);
-            simpleUser.setPassword(passwordEncoder.encode(simplePassword));
-
-            // Assign the USER role
-            Optional<Role> userRoleOpt = roleRepository.findByName("USER");
-            if (userRoleOpt.isPresent()) {
-                simpleUser.setRoles(new HashSet<>(List.of(userRoleOpt.get())));
-            } else {
-                System.out.printf("USER role not found. Cannot assign role to simple user.");
-                return; // Exit if USER role is not present
-            }
-
-            userRepository.save(simpleUser);
-            System.out.printf("Simple user '{}' created.", simpleUsername);
-        } else {
-            System.out.printf("Simple user '{}' already exists. Skipping creation.", simpleUsername);
-        }
-
-        // Create Admin User
-        String adminUsername = "adminUser";
-        String adminPassword = "adminPass123"; // In production, use a more secure password
-        Optional<User> existingAdminUser =userRepository.findByUsername(adminUsername);
-
-        if (!existingAdminUser.isPresent()) {
-            User adminUser = new User();
-            adminUser.setUsername(adminUsername);
-            adminUser.setPassword(passwordEncoder.encode(adminPassword));
-
-            // Assign the ADMIN role
-            Optional<Role> adminRoleOpt = roleRepository.findByName("ADMIN");
-            if (adminRoleOpt.isPresent()) {
-                adminUser.setRoles(new HashSet<>(List.of(adminRoleOpt.get())));
-            } else {
-                System.out.printf("ADMIN role not found. Cannot assign role to admin user.");
-                return; // Exit if ADMIN role is not present
-            }
-
-            userRepository.save(adminUser);
-            System.out.printf("Admin user '{}' created.", adminUsername);
-        } else {
-            System.out.printf("Admin user '{}' already exists. Skipping creation.", adminUsername);
         }
     }
 }

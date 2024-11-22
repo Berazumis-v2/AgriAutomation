@@ -1,23 +1,31 @@
 package org.STPP.AgriAutomation.api.controllers;
 
-import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
-import org.STPP.AgriAutomation.data.dtos.PlantCareSystemRequestDTO;
-import org.STPP.AgriAutomation.data.dtos.PlantCareSystemResponseDTO;
-import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
-import org.STPP.AgriAutomation.data.dtos.PlantCareSystemConverter;
-import org.STPP.AgriAutomation.api.exceptions.ResourceNotFoundException;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
+import org.STPP.AgriAutomation.api.exceptions.ResourceNotFoundException;
+import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
+import org.STPP.AgriAutomation.api.services.UserService;
+import org.STPP.AgriAutomation.data.dtos.PlantCareSystemConverter;
+import org.STPP.AgriAutomation.data.dtos.PlantCareSystemRequestDTO;
+import org.STPP.AgriAutomation.data.dtos.PlantCareSystemResponseDTO;
+import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
+import org.STPP.AgriAutomation.data.entities.User;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/plantcaresystems")
@@ -25,9 +33,11 @@ import org.slf4j.LoggerFactory;
 public class PlantCareSystemController {
 
     private final PlantCareSystemService plantCareSystemService;
+    private final UserService userService;
 
-    public PlantCareSystemController(PlantCareSystemService plantCareSystemService) {
+    public PlantCareSystemController(PlantCareSystemService plantCareSystemService, UserService userService) {
         this.plantCareSystemService = plantCareSystemService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -51,7 +61,13 @@ public class PlantCareSystemController {
             @Valid @RequestBody PlantCareSystemRequestDTO requestDTO,
             UriComponentsBuilder uriBuilder) {
 
-        PlantCareSystem plantCareSystem = PlantCareSystemConverter.convertToEntity(requestDTO);
+        // Retrieve the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
+
+        PlantCareSystem plantCareSystem = PlantCareSystemConverter.convertToEntity(requestDTO, currentUser);
         PlantCareSystem savedPlantCareSystem = plantCareSystemService.save(plantCareSystem);
 
         PlantCareSystemResponseDTO responseDTO = PlantCareSystemConverter.convertToResponseDTO(savedPlantCareSystem);

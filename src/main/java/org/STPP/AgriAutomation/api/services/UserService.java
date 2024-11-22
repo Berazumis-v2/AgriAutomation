@@ -117,4 +117,8 @@ public class UserService {
         UUID sessionId = jwtService.extractSessionId(refreshToken);
         sessionService.revokeSession(sessionId);
     }
+
+    public Optional<User> findByUsername(String username) {
+        return userRepo.findByUsername(username);
+    }
 }

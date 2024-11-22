@@ -1,8 +1,17 @@
 package org.STPP.AgriAutomation.data.entities;
 
-import jakarta.persistence.*;
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 
 @Entity
 public class PlantCareSystem {
@@ -17,6 +26,10 @@ public class PlantCareSystem {
 
     @OneToMany(mappedBy = "plantCareSystem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sensor> sensors;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User createdBy;
 
     public PlantCareSystem() {}
 
@@ -44,6 +57,10 @@ public class PlantCareSystem {
     public LocalDateTime getMaintenanceTimeStamp() { return maintenanceTimeStamp; }
 
     public void setMaintenanceTimeStamp(LocalDateTime maintenanceTimeStamp) { this.maintenanceTimeStamp = maintenanceTimeStamp; }
+
+    public User getCreatedBy() { return createdBy; }
+
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
     @PrePersist
     protected void onCreate() {
