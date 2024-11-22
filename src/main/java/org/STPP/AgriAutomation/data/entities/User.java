@@ -1,6 +1,7 @@
 package org.STPP.AgriAutomation.data.entities;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,7 @@ public class User implements UserDetails {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
     public User() {}
 
@@ -57,6 +58,8 @@ public class User implements UserDetails {
     public void setRoles(Set<Role> roles) {this.roles = roles;}
 
     public void addRole(Role role) {this.roles.add(role);}
+
+
 
     public void setUsername(String username) {this.username = username;}
 

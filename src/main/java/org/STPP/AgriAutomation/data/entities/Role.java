@@ -15,6 +15,10 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String name;
 
+    public static final String ADMIN = "ROLE_ADMIN";
+    public static final String USER = "ROLE_USER";
+
+    
     public Role() {}
 
     public Role(String name) {

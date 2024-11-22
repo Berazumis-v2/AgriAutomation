@@ -10,7 +10,9 @@ import org.STPP.AgriAutomation.data.dtos.PlantCareSystemConverter;
 import org.STPP.AgriAutomation.data.dtos.PlantCareSystemRequestDTO;
 import org.STPP.AgriAutomation.data.dtos.PlantCareSystemResponseDTO;
 import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
+import org.STPP.AgriAutomation.data.entities.Role;
 import org.STPP.AgriAutomation.data.entities.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -77,34 +79,59 @@ public class PlantCareSystemController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PlantCareSystemResponseDTO> updateById(
-            @PathVariable int id,
-            @Valid @RequestBody PlantCareSystemRequestDTO requestDTO) {
+public ResponseEntity<PlantCareSystemResponseDTO> updateById(
+        @PathVariable int id,
+        @Valid @RequestBody PlantCareSystemRequestDTO requestDTO) {
 
-        PlantCareSystem existingPlantCareSystem = plantCareSystemService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", id));
+    PlantCareSystem existingPlantCareSystem = plantCareSystemService.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", id));
 
-        existingPlantCareSystem.setName(requestDTO.getName());
-        existingPlantCareSystem.setDescription(requestDTO.getDescription());
-        existingPlantCareSystem.setAutomationEnabled(requestDTO.isAutomationEnabled());
+    // Retrieve the authenticated user
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String currentUsername = authentication.getName();
+    User currentUser = userService.findByUsername(currentUsername)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
 
-        if (requestDTO.getMaintenanceTimeStamp() != null) {
-            existingPlantCareSystem.setMaintenanceTimeStamp(requestDTO.getMaintenanceTimeStamp());
-        }
-
-        PlantCareSystem updatedPlantCareSystem = plantCareSystemService.save(existingPlantCareSystem);
-
-        PlantCareSystemResponseDTO responseDTO = PlantCareSystemConverter.convertToResponseDTO(updatedPlantCareSystem);
-        return ResponseEntity.ok(responseDTO);
+    // Check if the user is the creator or has admin role
+    if (!existingPlantCareSystem.getCreatedBy().getId().equals(currentUser.getId()) &&
+        !currentUser.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ADMIN))) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable int id) {
-        if (!plantCareSystemService.existsById(id)) {
-            throw new ResourceNotFoundException("PlantCareSystem", "id", id);
-        }
+    // Proceed with the update
+    existingPlantCareSystem.setName(requestDTO.getName());
+    existingPlantCareSystem.setDescription(requestDTO.getDescription());
+    existingPlantCareSystem.setAutomationEnabled(requestDTO.isAutomationEnabled());
 
-        plantCareSystemService.deleteById(id);
-        return ResponseEntity.noContent().build();
+    if (requestDTO.getMaintenanceTimeStamp() != null) {
+        existingPlantCareSystem.setMaintenanceTimeStamp(requestDTO.getMaintenanceTimeStamp());
     }
+
+    PlantCareSystem updatedPlantCareSystem = plantCareSystemService.save(existingPlantCareSystem);
+
+    PlantCareSystemResponseDTO responseDTO = PlantCareSystemConverter.convertToResponseDTO(updatedPlantCareSystem);
+    return ResponseEntity.ok(responseDTO);
+}
+
+
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> deleteById(@PathVariable int id) {
+    PlantCareSystem existingPlantCareSystem = plantCareSystemService.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("PlantCareSystem", "id", id));
+
+    // Retrieve the authenticated user
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String currentUsername = authentication.getName();
+    User currentUser = userService.findByUsername(currentUsername)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
+
+    // Check if the user is the creator or has admin role
+    if (!existingPlantCareSystem.getCreatedBy().getId().equals(currentUser.getId()) &&
+        !currentUser.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ADMIN))) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    plantCareSystemService.deleteById(id);
+    return ResponseEntity.noContent().build();
+}
 }

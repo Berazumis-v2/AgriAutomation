@@ -61,7 +61,7 @@ public class DataSeeder implements CommandLineRunner {
      * Seeds roles into the database.
      */
     private void seedRoles() {
-        List<String> roles = Arrays.asList("USER", "ADMIN");
+        List<String> roles = Arrays.asList("ROLE_USER", "ROLE_ADMIN");
 
         for (String roleName : roles) {
             Optional<Role> roleOpt = roleRepository.findByName(roleName);
@@ -90,7 +90,7 @@ public class DataSeeder implements CommandLineRunner {
             simpleUser.setPassword(passwordEncoder.encode(simplePassword));
 
             // Assign the USER role
-            Optional<Role> userRoleOpt = roleRepository.findByName("USER");
+            Optional<Role> userRoleOpt = roleRepository.findByName("ROLE_USER");
             if (userRoleOpt.isPresent()) {
                 simpleUser.setRoles(new HashSet<>(List.of(userRoleOpt.get())));
             } else {
@@ -115,7 +115,7 @@ public class DataSeeder implements CommandLineRunner {
             adminUser.setPassword(passwordEncoder.encode(adminPassword));
 
             // Assign the ADMIN role
-            Optional<Role> adminRoleOpt = roleRepository.findByName("ADMIN");
+            Optional<Role> adminRoleOpt = roleRepository.findByName("ROLE_ADMIN");
             if (adminRoleOpt.isPresent()) {
                 adminUser.setRoles(new HashSet<>(List.of(adminRoleOpt.get())));
             } else {
