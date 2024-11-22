@@ -1,28 +1,35 @@
-// PlantController.java
 package org.STPP.AgriAutomation.api.controllers;
 
-import org.STPP.AgriAutomation.data.entities.Plant;
-import org.STPP.AgriAutomation.data.entities.Sensor;
-import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
-import org.STPP.AgriAutomation.data.dtos.PlantRequestDTO;
-import org.STPP.AgriAutomation.data.dtos.PlantResponseDTO;
-import org.STPP.AgriAutomation.api.services.PlantService;
-import org.STPP.AgriAutomation.api.services.SensorService;
-import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
-import org.STPP.AgriAutomation.data.dtos.PlantConverter;
-import org.STPP.AgriAutomation.api.exceptions.ResourceNotFoundException;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
+import org.STPP.AgriAutomation.api.exceptions.ResourceNotFoundException;
+import org.STPP.AgriAutomation.api.services.PlantCareSystemService;
+import org.STPP.AgriAutomation.api.services.PlantService;
+import org.STPP.AgriAutomation.api.services.SensorService;
+import org.STPP.AgriAutomation.api.services.UserService;
+import org.STPP.AgriAutomation.data.dtos.PlantConverter;
+import org.STPP.AgriAutomation.data.dtos.PlantRequestDTO;
+import org.STPP.AgriAutomation.data.dtos.PlantResponseDTO;
+import org.STPP.AgriAutomation.data.entities.Plant;
+import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
+import org.STPP.AgriAutomation.data.entities.Sensor;
+import org.STPP.AgriAutomation.data.entities.User;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/plantcaresystems/{plantcaresystemId}/sensors/{sensorId}/plants")
@@ -32,11 +39,13 @@ public class PlantController {
     private final PlantService plantService;
     private final SensorService sensorService;
     private final PlantCareSystemService plantCareSystemService;
+    private final UserService userService; // New dependency
 
-    public PlantController(PlantService plantService, SensorService sensorService, PlantCareSystemService plantCareSystemService) {
+    public PlantController(PlantService plantService, SensorService sensorService, PlantCareSystemService plantCareSystemService, UserService userService) {
         this.plantService = plantService;
         this.sensorService = sensorService;
         this.plantCareSystemService = plantCareSystemService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -96,9 +105,13 @@ public class PlantController {
             throw new ResourceNotFoundException("Sensor", "plantCareSystemId", plantcaresystemId);
         }
 
-        Plant plant = PlantConverter.convertToEntity(requestDTO);
-        plant.setSensor(sensor);
+        // Retrieve the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
 
+        Plant plant = PlantConverter.convertToEntity(requestDTO, sensor, currentUser);
         Plant savedPlant = plantService.save(plant);
 
         PlantResponseDTO responseDTO = PlantConverter.convertToResponseDTO(savedPlant);

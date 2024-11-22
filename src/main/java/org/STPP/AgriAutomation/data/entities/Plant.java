@@ -22,6 +22,10 @@ public class Plant {
     @JoinColumn(name = "sensor_id", nullable = false)
     private Sensor sensor;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User createdBy;
+
     public Plant() {}
 
     public Plant(int id, String name) {
@@ -43,4 +47,8 @@ public class Plant {
     public String getGrowthStage() {return growthStage;}
 
     public void setGrowthStage(String growthStage) {this.growthStage = growthStage;}
+
+    public User getCreatedBy() {return createdBy;}
+
+    public void setCreatedBy(User createdBy) {this.createdBy = createdBy;}
 }
