@@ -1,6 +1,7 @@
 package org.STPP.AgriAutomation.api.controllers;
 
 import org.STPP.AgriAutomation.api.services.UserService;
+import org.STPP.AgriAutomation.data.dtos.UserDTO;
 import org.STPP.AgriAutomation.data.dtos.auth.AuthResponse;
 import org.STPP.AgriAutomation.data.dtos.auth.LoginRequest;
 import org.STPP.AgriAutomation.data.dtos.auth.RegisterRequest;
@@ -25,9 +26,10 @@ public class UserController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Validated @RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<UserDTO> register(@Validated @RequestBody RegisterRequest registerRequest) {
         User user = service.register(registerRequest);
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+        UserDTO userDTO = new UserDTO(user.getUsername());
+        return new ResponseEntity<>(userDTO, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
