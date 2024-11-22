@@ -170,32 +170,39 @@ public class DataSeeder implements CommandLineRunner {
             Sensor tempSensorGH = new Sensor("TempModelGH-100", greenhouseSystem);
             tempSensorGH.setTemperature(22);
             tempSensorGH.setHumidity(55);
+            tempSensorGH.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor humiditySensorGH = new Sensor("HumModelGH-200", greenhouseSystem);
             humiditySensorGH.setTemperature(23);
             humiditySensorGH.setHumidity(60);
+            humiditySensorGH.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor lightSensorGH = new Sensor("LightModelGH-300", greenhouseSystem);
             lightSensorGH.setTemperature(21);
             lightSensorGH.setHumidity(58);
+            lightSensorGH.setCreatedBy(simpleUser); // Assign createdBy
 
             // Create Sensors for Outdoor System
             Sensor tempSensorOD = new Sensor("TempModelOD-100", outdoorSystem);
             tempSensorOD.setTemperature(18);
             tempSensorOD.setHumidity(40);
+            tempSensorOD.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor soilMoistureSensorOD = new Sensor("SoilModelOD-200", outdoorSystem);
             soilMoistureSensorOD.setTemperature(19);
             soilMoistureSensorOD.setHumidity(45);
+            soilMoistureSensorOD.setCreatedBy(simpleUser); // Assign createdBy
 
             // Create Sensors for Vertical Farm System
             Sensor tempSensorVF = new Sensor("TempModelVF-100", verticalFarmSystem);
             tempSensorVF.setTemperature(20);
             tempSensorVF.setHumidity(50);
+            tempSensorVF.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor humiditySensorVF = new Sensor("HumModelVF-200", verticalFarmSystem);
             humiditySensorVF.setTemperature(21);
             humiditySensorVF.setHumidity(55);
+            humiditySensorVF.setCreatedBy(simpleUser); // Assign createdBy
 
             sensorRepository.saveAll(Arrays.asList(
                     tempSensorGH, humiditySensorGH, lightSensorGH,
