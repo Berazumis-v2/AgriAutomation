@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/plantcaresystems/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/plantcaresystems/**/sensors/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/plantcaresystems/**/sensors/**/plants/**").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

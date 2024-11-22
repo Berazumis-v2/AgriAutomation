@@ -13,8 +13,10 @@ import org.STPP.AgriAutomation.data.dtos.PlantRequestDTO;
 import org.STPP.AgriAutomation.data.dtos.PlantResponseDTO;
 import org.STPP.AgriAutomation.data.entities.Plant;
 import org.STPP.AgriAutomation.data.entities.PlantCareSystem;
+import org.STPP.AgriAutomation.data.entities.Role;
 import org.STPP.AgriAutomation.data.entities.Sensor;
 import org.STPP.AgriAutomation.data.entities.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -144,6 +146,19 @@ public class PlantController {
             throw new ResourceNotFoundException("Plant", "sensorId", sensorId);
         }
 
+        // Retrieve the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
+
+        // Check if the user is the creator or has admin role
+        if (!existingPlant.getCreatedBy().getId().equals(currentUser.getId()) &&
+            !currentUser.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ADMIN))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Proceed with the update
         existingPlant.setName(requestDTO.getName());
         existingPlant.setGrowthStage(requestDTO.getGrowthStage());
 
@@ -173,6 +188,18 @@ public class PlantController {
 
         if (existingPlant.getSensor() == null || existingPlant.getSensor().getId() != sensorId) {
             throw new ResourceNotFoundException("Plant", "sensorId", sensorId);
+        }
+
+        // Retrieve the authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUsername));
+
+        // Check if the user is the creator or has admin role
+        if (!existingPlant.getCreatedBy().getId().equals(currentUser.getId()) &&
+            !currentUser.getRoles().stream().anyMatch(role -> role.getName().equals(Role.ADMIN))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         plantService.deleteById(plantId);

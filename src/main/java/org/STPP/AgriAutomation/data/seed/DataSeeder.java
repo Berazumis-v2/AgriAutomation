@@ -215,38 +215,45 @@ public class DataSeeder implements CommandLineRunner {
             tomatoPlant.setName("Tomato");
             tomatoPlant.setGrowthStage("Vegetative");
             tomatoPlant.setSensor(tempSensorGH);
+            tomatoPlant.setCreatedBy(simpleUser); // Assign createdBy
 
             Plant lettucePlant = new Plant();
             lettucePlant.setName("Lettuce");
             lettucePlant.setGrowthStage("Seedling");
             lettucePlant.setSensor(humiditySensorGH);
+            lettucePlant.setCreatedBy(simpleUser); // Assign createdBy
 
             Plant basilPlant = new Plant();
             basilPlant.setName("Basil");
             basilPlant.setGrowthStage("Flowering");
             basilPlant.setSensor(lightSensorGH);
+            basilPlant.setCreatedBy(simpleUser); // Assign createdBy
 
             // Create Plants for Outdoor System
             Plant pumpkinPlant = new Plant();
             pumpkinPlant.setName("Pumpkin");
             pumpkinPlant.setGrowthStage("Fruit Development");
             pumpkinPlant.setSensor(tempSensorOD);
+            pumpkinPlant.setCreatedBy(simpleUser); // Assign createdBy
 
             Plant carrotPlant = new Plant();
             carrotPlant.setName("Carrot");
             carrotPlant.setGrowthStage("Root Development");
             carrotPlant.setSensor(soilMoistureSensorOD);
+            carrotPlant.setCreatedBy(simpleUser); // Assign createdBy
 
             // Create Plants for Vertical Farm System
             Plant spinachPlant = new Plant();
             spinachPlant.setName("Spinach");
             spinachPlant.setGrowthStage("Mature");
             spinachPlant.setSensor(tempSensorVF);
+            spinachPlant.setCreatedBy(simpleUser); // Assign createdBy
 
             Plant kalePlant = new Plant();
             kalePlant.setName("Kale");
             kalePlant.setGrowthStage("Vegetative");
             kalePlant.setSensor(humiditySensorVF);
+            kalePlant.setCreatedBy(simpleUser); // Assign createdBy
 
             plantRepository.saveAll(Arrays.asList(
                     tomatoPlant, lettucePlant, basilPlant,
