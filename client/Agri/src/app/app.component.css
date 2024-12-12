@@ -1,0 +1,36 @@
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.connection-status {
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px 0;
+}
+
+.connection-status.pending {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+}
+
+.connection-status.success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.connection-status.error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.error-details {
+  font-size: 0.9em;
+  margin-top: 10px;
+  white-space: pre-line;
+  font-family: monospace;
+}
