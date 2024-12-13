@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/health").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/plantcaresystems/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/plantcaresystems/**/sensors/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/plantcaresystems/**/sensors/**/plants/**").permitAll()

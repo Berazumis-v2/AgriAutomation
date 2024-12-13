@@ -5,6 +5,12 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { inject } from '@angular/core';
 import { AuthService } from './services/auth.service';
 import { Router } from '@angular/router';
+import { PlantCareListComponent } from './components/plant-care-system/plant-care-list.component';
+import { PlantCareFormComponent } from './components/plant-care-system/plant-care-form.component';
+import { SensorListComponent } from './components/sensor/sensor-list.component';
+import { SensorFormComponent } from './components/sensor/sensor-form.component';
+import { PlantListComponent } from './components/plant/plant-list.component';
+import { PlantFormComponent } from './components/plant/plant-form.component';
 
 // Auth guard function
 const authGuard = () => {
@@ -25,6 +31,66 @@ export const routes: Routes = [
         path: 'dashboard', 
         component: DashboardComponent,
         canActivate: [authGuard]
+    },
+    {
+        path: 'plant-care-systems',
+        children: [
+            {
+                path: '',  // This matches /plant-care-systems
+                component: PlantCareListComponent,
+                canActivate: [authGuard]
+            },
+            {
+                path: 'new',  // This matches /plant-care-systems/new
+                component: PlantCareFormComponent,
+                canActivate: [authGuard]
+            },
+            {
+                path: ':id/edit',  // This matches /plant-care-systems/:id/edit
+                component: PlantCareFormComponent,
+                canActivate: [authGuard]
+            },
+            {
+                path: ':plantCareSystemId/sensors',  // This matches /plant-care-systems/:plantCareSystemId/sensors
+                children: [
+                    {
+                        path: '',
+                        component: SensorListComponent,
+                        canActivate: [authGuard]
+                    },
+                    {
+                        path: 'new',
+                        component: SensorFormComponent,
+                        canActivate: [authGuard]
+                    },
+                    {
+                        path: ':id/edit',
+                        component: SensorFormComponent,
+                        canActivate: [authGuard]
+                    },
+                    {
+                        path: ':sensorId/plants',
+                        children: [
+                            {
+                                path: '',
+                                component: PlantListComponent,
+                                canActivate: [authGuard]
+                            },
+                            {
+                                path: 'new',
+                                component: PlantFormComponent,
+                                canActivate: [authGuard]
+                            },
+                            {
+                                path: ':id/edit',
+                                component: PlantFormComponent,
+                                canActivate: [authGuard]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     },
     { path: '', redirectTo: '/login', pathMatch: 'full' }
 ];
