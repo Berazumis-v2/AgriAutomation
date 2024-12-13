@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { PlantService } from '../../services/plant.service';
 import { Plant } from '../../interfaces/plant.interface';
+import { MessageService } from '../../services/message.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-plant-list',
@@ -15,7 +17,8 @@ import { Plant } from '../../interfaces/plant.interface';
                     <h2>Plants for Sensor #{{sensorId}}</h2>
                 </div>
                 <div class="col">
-                    <a [routerLink]="['new']" class="paper-btn btn-primary">Add New Plant</a>
+                    <button class="paper-btn" (click)="backToSensors()">Back to Sensors</button>
+                    <a [routerLink]="['new']" class="paper-btn btn-primary margin-left">Add New Plant</a>
                 </div>
             </div>
 
@@ -53,6 +56,9 @@ import { Plant } from '../../interfaces/plant.interface';
             padding: 0.2rem 0.4rem;
             margin: 0 0.2rem;
         }
+        .margin-left {
+            margin-left: 1rem;
+        }
     `]
 })
 export class PlantListComponent implements OnInit {
@@ -63,7 +69,8 @@ export class PlantListComponent implements OnInit {
     constructor(
         private plantService: PlantService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private messageService: MessageService
     ) {
         this.plantCareSystemId = Number(this.route.snapshot.paramMap.get('plantCareSystemId'));
         this.sensorId = Number(this.route.snapshot.paramMap.get('sensorId'));
@@ -89,15 +96,35 @@ export class PlantListComponent implements OnInit {
             this.plantService.delete(this.plantCareSystemId, this.sensorId, id).subscribe({
                 next: () => {
                     this.loadPlants();
+                    this.messageService.showSuccess('Plant deleted successfully');
                 },
-                error: (error) => {
-                    console.error('Error deleting plant:', error);
+                error: (error: HttpErrorResponse) => {
+                    if (error.status === 403) {
+                        this.messageService.showError('You are not authorized to delete this plant');
+                    } else {
+                        this.messageService.showError('Error deleting plant');
+                    }
                 }
             });
         }
     }
 
     editPlant(id: number) {
-        this.router.navigate([id, 'edit'], { relativeTo: this.route });
+        this.plantService.getById(this.plantCareSystemId, this.sensorId, id).subscribe({
+            next: () => {
+                this.router.navigate([id, 'edit'], { relativeTo: this.route });
+            },
+            error: (error: HttpErrorResponse) => {
+                if (error.status === 403) {
+                    this.messageService.showError('You are not authorized to edit this plant');
+                } else {
+                    this.messageService.showError('Error accessing plant');
+                }
+            }
+        });
+    }
+
+    backToSensors() {
+        this.router.navigate(['/plant-care-systems', this.plantCareSystemId, 'sensors']);
     }
 } 

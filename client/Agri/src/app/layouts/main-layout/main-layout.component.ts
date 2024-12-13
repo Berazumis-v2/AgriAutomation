@@ -2,12 +2,14 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { MessageComponent } from '../../components/shared/message.component';
 
 @Component({
     selector: 'app-main-layout',
     standalone: true,
-    imports: [CommonModule, RouterOutlet, RouterLink],
+    imports: [CommonModule, RouterOutlet, RouterLink, MessageComponent],
     template: `
+        <app-message></app-message>
         <nav class="border split-nav">
             <div class="nav-brand">
                 <h3>Agri Automation</h3>

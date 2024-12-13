@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PlantCareSystemService } from '../../services/plant-care-system.service';
+import { MessageService } from '../../services/message.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-plant-care-form',
@@ -62,7 +64,8 @@ export class PlantCareFormComponent implements OnInit {
         private fb: FormBuilder,
         private plantCareService: PlantCareSystemService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private messageService: MessageService
     ) {
         this.form = this.fb.group({
             name: ['', Validators.required],
@@ -103,11 +106,17 @@ export class PlantCareFormComponent implements OnInit {
 
             operation.subscribe({
                 next: () => {
+                    this.messageService.showSuccess(
+                        `System successfully ${this.isEditing ? 'updated' : 'created'}`
+                    );
                     this.router.navigate(['/plant-care-systems']);
                 },
-                error: (error) => {
-                    console.error('Error saving system:', error);
-                    // Add error handling
+                error: (error: HttpErrorResponse) => {
+                    if (error.status === 403) {
+                        this.messageService.showError('You are not authorized to modify this system');
+                    } else {
+                        this.messageService.showError(`Error ${this.isEditing ? 'updating' : 'creating'} system`);
+                    }
                 }
             });
         }

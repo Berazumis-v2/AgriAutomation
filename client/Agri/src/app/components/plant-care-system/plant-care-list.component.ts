@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { PlantCareSystemService } from '../../services/plant-care-system.service';
 import { PlantCareSystem } from '../../interfaces/plant-care-system.interface';
+import { MessageService } from '../../services/message.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-plant-care-list',
@@ -65,7 +67,8 @@ export class PlantCareListComponent implements OnInit {
 
     constructor(
         private plantCareService: PlantCareSystemService,
-        private router: Router
+        private router: Router,
+        private messageService: MessageService
     ) {}
 
     ngOnInit() {
@@ -89,17 +92,32 @@ export class PlantCareListComponent implements OnInit {
             this.plantCareService.delete(id).subscribe({
                 next: () => {
                     this.loadSystems();
+                    this.messageService.showSuccess('System deleted successfully');
                 },
-                error: (error) => {
-                    console.error('Error deleting system:', error);
-                    // Add error handling here
+                error: (error: HttpErrorResponse) => {
+                    if (error.status === 403) {
+                        this.messageService.showError('You are not authorized to delete this system');
+                    } else {
+                        this.messageService.showError('Error deleting system');
+                    }
                 }
             });
         }
     }
 
     editSystem(id: number) {
-        this.router.navigate(['/plant-care-systems', id, 'edit']);
+        this.plantCareService.getById(id).subscribe({
+            next: () => {
+                this.router.navigate(['/plant-care-systems', id, 'edit']);
+            },
+            error: (error: HttpErrorResponse) => {
+                if (error.status === 403) {
+                    this.messageService.showError('You are not authorized to edit this system');
+                } else {
+                    this.messageService.showError('Error accessing system');
+                }
+            }
+        });
     }
 
     viewSensors(id: number) {

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SensorService } from '../../services/sensor.service';
+import { MessageService } from '../../services/message.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-sensor-form',
@@ -63,7 +65,8 @@ export class SensorFormComponent implements OnInit {
         private fb: FormBuilder,
         private sensorService: SensorService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private messageService: MessageService
     ) {
         this.plantCareSystemId = Number(this.route.snapshot.paramMap.get('plantCareSystemId'));
         
@@ -105,10 +108,17 @@ export class SensorFormComponent implements OnInit {
 
             operation.subscribe({
                 next: () => {
+                    this.messageService.showSuccess(
+                        `Sensor successfully ${this.isEditing ? 'updated' : 'created'}`
+                    );
                     this.goBack();
                 },
-                error: (error) => {
-                    console.error('Error saving sensor:', error);
+                error: (error: HttpErrorResponse) => {
+                    if (error.status === 403) {
+                        this.messageService.showError('You are not authorized to modify this sensor');
+                    } else {
+                        this.messageService.showError(`Error ${this.isEditing ? 'updating' : 'creating'} sensor`);
+                    }
                 }
             });
         }

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PlantService } from '../../services/plant.service';
+import { MessageService } from '../../services/message.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-plant-form',
@@ -56,7 +58,8 @@ export class PlantFormComponent implements OnInit {
         private fb: FormBuilder,
         private plantService: PlantService,
         private router: Router,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private messageService: MessageService
     ) {
         this.plantCareSystemId = Number(this.route.snapshot.paramMap.get('plantCareSystemId'));
         this.sensorId = Number(this.route.snapshot.paramMap.get('sensorId'));
@@ -97,10 +100,17 @@ export class PlantFormComponent implements OnInit {
 
             operation.subscribe({
                 next: () => {
+                    this.messageService.showSuccess(
+                        `Plant successfully ${this.isEditing ? 'updated' : 'created'}`
+                    );
                     this.goBack();
                 },
-                error: (error) => {
-                    console.error('Error saving plant:', error);
+                error: (error: HttpErrorResponse) => {
+                    if (error.status === 403) {
+                        this.messageService.showError('You are not authorized to modify this plant');
+                    } else {
+                        this.messageService.showError(`Error ${this.isEditing ? 'updating' : 'creating'} plant`);
+                    }
                 }
             });
         }
