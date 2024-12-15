@@ -1,12 +1,18 @@
 package org.STPP.AgriAutomation.data.dtos;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class PlantRequestDTO {
 
-    @NotBlank(message = "Name is mandatory")
+    @NotBlank(message = "Name is required")
+    @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
     private String name;
 
+    @NotBlank(message = "Growth stage is required")
+    @Pattern(regexp = "^(Seedling|Vegetative|Flowering|Fruiting)$", 
+            message = "Growth stage must be one of: Seedling, Vegetative, Flowering, Fruiting")
     private String growthStage;
 
     private int sensorId;

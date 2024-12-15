@@ -6,11 +6,12 @@ import { PlantCareSystem } from '../../interfaces/plant-care-system.interface';
 import { MessageService } from '../../services/message.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-plant-care-list',
     standalone: true,
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, FormsModule],
     template: `
         <div class="paper container">
             <div class="banner-section">
@@ -24,8 +25,30 @@ import { AuthService } from '../../services/auth.service';
                 Add New System
             </a>
             
-            <div class="grid-container">
-                <div class="card system-card" *ngFor="let system of systems">
+            <div class="search-container margin-bottom">
+                <div class="search-wrapper">
+                    <input 
+                        type="text" 
+                        [(ngModel)]="searchTerm" 
+                        (input)="onSearch()"
+                        placeholder="Search by name..."
+                        class="search-input">
+                    <button 
+                        *ngIf="searchTerm" 
+                        (click)="clearSearch()" 
+                        class="btn-small clear-btn">
+                        Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div *ngIf="filteredSystems.length === 0" class="empty-message">
+                <p>No plant care systems found</p>
+                <p *ngIf="searchTerm" class="sub-text">Try adjusting your search term</p>
+            </div>
+
+            <div class="grid-container" *ngIf="filteredSystems.length > 0">
+                <div class="card system-card" *ngFor="let system of filteredSystems">
                     <div class="card-body">
                         <h4 class="card-title">{{system.name}}</h4>
                         <p class="description">{{system.description}}</p>
@@ -98,7 +121,7 @@ import { AuthService } from '../../services/auth.service';
 
          .banner-section {
         margin: -2rem -2rem 2rem -2rem;
-        text-align: center;  // Center the section content
+        text-align: center;  /* Center the section content */
     }
 
     .banner-image-container {
@@ -108,19 +131,59 @@ import { AuthService } from '../../services/auth.service';
         justify-content: center;
         background-color: var(--primary-shaded-70);
         padding: 1rem;
-        margin: 0 auto;  // Center the container
+        margin: 0 auto;  /* Center the container */
     }
 
     .section-title {
         padding: 1rem;
         margin: 0;
         background-color: var(--primary-shaded-70);
-        text-align: center;  // Center the title
+        text-align: center;  /* Center the title */
+    }
+
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .search-wrapper {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .search-input {
+        flex: 1;
+    }
+
+    .clear-btn {
+        background-color: var(--danger-light);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+        &:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 2rem;
+        background-color: var(--primary-shaded-70);
+        border-radius: 4px;
+    }
+
+    .sub-text {
+        color: var(--muted);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
     }
     `]
 })
 export class PlantCareListComponent implements OnInit {
     systems: PlantCareSystem[] = [];
+    filteredSystems: PlantCareSystem[] = [];
+    searchTerm: string = '';
 
     constructor(
         private plantCareService: PlantCareSystemService,
@@ -137,6 +200,7 @@ export class PlantCareListComponent implements OnInit {
         this.plantCareService.getAll().subscribe({
             next: (data) => {
                 this.systems = data;
+                this.filteredSystems = data;
             },
             error: (error) => {
                 console.error('Error loading systems:', error);
@@ -184,5 +248,14 @@ export class PlantCareListComponent implements OnInit {
 
     get isLoggedIn(): boolean {
         return this.authService.isLoggedIn();
+    }
+
+    onSearch() {
+        this.filteredSystems = this.systems.filter(system => system.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
+    }
+
+    clearSearch() {
+        this.searchTerm = '';
+        this.onSearch();
     }
 } 

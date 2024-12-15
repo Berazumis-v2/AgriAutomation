@@ -6,24 +6,49 @@ import { Plant } from '../../interfaces/plant.interface';
 import { MessageService } from '../../services/message.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-plant-list',
     standalone: true,
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, FormsModule],
     template: `
         <div class="paper container">
             <div class="banner-section">
                 <div class="banner-image-container">
-                    <img src="plants.png" alt="Growing Plants">
+                    <img src="plants.png" alt="Growing Plants" class="banner-image">
                 </div>
                 <h2 class="section-title text-center">Plants for Sensor #{{sensorId}}</h2>
             </div>
             
-            <a *ngIf="isLoggedIn" [routerLink]="['new']" class="paper-btn btn-primary btn-block margin-bottom text-center">Add New Plant</a>
-            
-            <div class="grid-container">
-                <div class="card plant-card" *ngFor="let plant of plants">
+            <a *ngIf="isLoggedIn" [routerLink]="['new']" class="paper-btn btn-primary btn-block margin-bottom text-center">
+                Add New Plant
+            </a>
+
+            <div class="search-container margin-bottom">
+                <div class="search-wrapper">
+                    <input 
+                        type="text" 
+                        [(ngModel)]="searchTerm" 
+                        (input)="onSearch()"
+                        placeholder="Search by name..."
+                        class="search-input">
+                    <button 
+                        *ngIf="searchTerm" 
+                        (click)="clearSearch()" 
+                        class="btn-small clear-btn">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <div *ngIf="filteredPlants.length === 0" class="empty-message">
+                <p>No plants found</p>
+                <p *ngIf="searchTerm" class="sub-text">Try adjusting your search term</p>
+            </div>
+
+            <div class="grid-container" *ngIf="filteredPlants.length > 0">
+                <div class="card plant-card" *ngFor="let plant of filteredPlants">
                     <div class="card-body">
                         <h4 class="card-title">{{plant.name}}</h4>
                         <div class="growth-stage">
@@ -115,41 +140,81 @@ import { AuthService } from '../../services/auth.service';
         }
 
         .banner-section {
-        margin: -2rem -2rem 2rem -2rem;
-        text-align: center;  // Center the section content
-    }
+            margin: -2rem -2rem 2rem -2rem;
+            text-align: center; /* Center the section content */
+        }
 
-    .banner-image-container {
-        min-height: 200px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--primary-shaded-70);
-        padding: 1rem;
-        margin: 0 auto;  // Center the container
-    }
+        .banner-image-container {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary-shaded-70);
+            padding: 1rem;
+            margin: 0 auto; /* Center the container */
+        }
 
-    .banner-image {
-        max-width: 100%;
-        max-height: 300px;
-        height: auto;
-        object-fit: contain;
-        display: block;  // Remove any inline spacing
-        margin: 0 auto;  // Center the image
-    }
+        .banner-image {
+            max-width: 100%;
+            max-height: 300px;
+            height: auto;
+            object-fit: contain;
+            display: block; /* Remove any inline spacing */
+            margin: 0 auto; /* Center the image */
+        }
 
-    .section-title {
-        padding: 1rem;
-        margin: 0;
-        background-color: var(--primary-shaded-70);
-        text-align: center;  // Center the title
-    }
+        .section-title {
+            padding: 1rem;
+            margin: 0;
+            background-color: var(--primary-shaded-70);
+            text-align: center; /* Center the title */
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+        }
+
+        .clear-btn {
+            background-color: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            &:hover {
+                background-color: var(--danger);
+                color: white;
+            }
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--primary-shaded-70);
+            border-radius: 4px;
+        }
+
+        .sub-text {
+            color: var(--muted);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
     `]
 })
 export class PlantListComponent implements OnInit {
     plants: Plant[] = [];
+    filteredPlants: Plant[] = [];
     plantCareSystemId: number;
     sensorId: number;
+    searchTerm: string = '';
 
     constructor(
         private plantService: PlantService,
@@ -170,6 +235,7 @@ export class PlantListComponent implements OnInit {
         this.plantService.getAll(this.plantCareSystemId, this.sensorId).subscribe({
             next: (data) => {
                 this.plants = data;
+                this.filteredPlants = data;
             },
             error: (error) => {
                 console.error('Error loading plants:', error);
@@ -216,5 +282,21 @@ export class PlantListComponent implements OnInit {
 
     get isLoggedIn(): boolean {
         return this.authService.isLoggedIn();
+    }
+
+    onSearch() {
+        if (!this.searchTerm.trim()) {
+            this.filteredPlants = this.plants;
+        } else {
+            const term = this.searchTerm.toLowerCase();
+            this.filteredPlants = this.plants.filter(plant => 
+                plant.name.toLowerCase().includes(term)
+            );
+        }
+    }
+
+    clearSearch() {
+        this.searchTerm = '';
+        this.onSearch();
     }
 } 

@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { PlantService } from '../../services/plant.service';
 import { MessageService } from '../../services/message.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { CustomValidators } from '../../validators/custom-validators';
 
 @Component({
     selector: 'app-plant-form',
@@ -22,19 +23,36 @@ import { HttpErrorResponse } from '@angular/common/http';
                         id="name" 
                         formControlName="name" 
                         class="input-block">
-                    <div class="text-danger" *ngIf="form.get('name')?.touched && form.get('name')?.errors?.['required']">
-                        Name is required
+                    <div class="validation-feedback" *ngIf="form.get('name')?.touched">
+                        <div *ngIf="form.get('name')?.errors?.['required']" class="text-danger">
+                            Name is required
+                        </div>
+                        <div *ngIf="form.get('name')?.errors?.['minlength'] || form.get('name')?.errors?.['maxlength']" class="text-danger">
+                            Name must be between 2 and 50 characters
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="growthStage">Growth Stage</label>
-                    <select id="growthStage" formControlName="growthStage" class="input-block">
+                    <select 
+                        id="growthStage" 
+                        formControlName="growthStage" 
+                        class="input-block">
+                        <option value="">Select a growth stage</option>
                         <option value="Seedling">Seedling</option>
                         <option value="Vegetative">Vegetative</option>
                         <option value="Flowering">Flowering</option>
                         <option value="Fruiting">Fruiting</option>
                     </select>
+                    <div class="validation-feedback" *ngIf="form.get('growthStage')?.touched">
+                        <div *ngIf="form.get('growthStage')?.errors?.['required']" class="text-danger">
+                            Growth stage is required
+                        </div>
+                        <div *ngIf="form.get('growthStage')?.errors?.['growthStage']" class="text-danger">
+                            Please select a valid growth stage
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row flex-edges">
@@ -45,7 +63,16 @@ import { HttpErrorResponse } from '@angular/common/http';
                 </div>
             </form>
         </div>
-    `
+    `,
+    styles: [`
+        .validation-feedback {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .text-danger {
+            color: var(--danger);
+        }
+    `]
 })
 export class PlantFormComponent implements OnInit {
     form: FormGroup;
@@ -65,8 +92,8 @@ export class PlantFormComponent implements OnInit {
         this.sensorId = Number(this.route.snapshot.paramMap.get('sensorId'));
         
         this.form = this.fb.group({
-            name: ['', Validators.required],
-            growthStage: ['Seedling']
+            name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+            growthStage: ['', [Validators.required, CustomValidators.growthStage]]
         });
     }
 

@@ -6,6 +6,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Plant {
@@ -14,7 +17,13 @@ public class Plant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @NotBlank(message = "Name is required")
+    @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
     private String name;
+
+    @NotBlank(message = "Growth stage is required")
+    @Pattern(regexp = "^(Seedling|Vegetative|Flowering|Fruiting)$", 
+            message = "Growth stage must be one of: Seedling, Vegetative, Flowering, Fruiting")
     private String growthStage; //e.g., Seedling, Vegetative, Flowering, etc
 
     // Association with Sensor

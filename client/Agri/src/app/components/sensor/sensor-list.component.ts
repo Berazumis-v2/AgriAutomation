@@ -6,11 +6,12 @@ import { Sensor } from '../../interfaces/sensor.interface';
 import { MessageService } from '../../services/message.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-sensor-list',
     standalone: true,
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, FormsModule],
     template: `
         <div class="paper container">
             <div class="banner-section">
@@ -20,10 +21,34 @@ import { AuthService } from '../../services/auth.service';
                 <h2 class="section-title text-center">Sensors for Plant Care System #{{plantCareSystemId}}</h2>
             </div>
             
-            <a *ngIf="isLoggedIn" [routerLink]="['new']" class="paper-btn btn-primary btn-block margin-bottom text-center">Add New Sensor</a>
-            
-            <div class="grid-container">
-                <div class="card sensor-card" *ngFor="let sensor of sensors">
+            <a *ngIf="isLoggedIn" [routerLink]="['new']" class="paper-btn btn-primary btn-block margin-bottom text-center">
+                Add New Sensor
+            </a>
+
+            <div class="search-container margin-bottom">
+                <div class="search-wrapper">
+                    <input 
+                        type="text" 
+                        [(ngModel)]="searchTerm" 
+                        (input)="onSearch()"
+                        placeholder="Search by model..."
+                        class="search-input">
+                    <button 
+                        *ngIf="searchTerm" 
+                        (click)="clearSearch()" 
+                        class="btn-small clear-btn">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <div *ngIf="filteredSensors.length === 0" class="empty-message">
+                <p>No sensors found</p>
+                <p *ngIf="searchTerm" class="sub-text">Try adjusting your search term</p>
+            </div>
+
+            <div class="grid-container" *ngIf="filteredSensors.length > 0">
+                <div class="card sensor-card" *ngFor="let sensor of filteredSensors">
                     <div class="card-body">
                         <h4 class="card-title">{{sensor.model}}</h4>
                         <div class="readings">
@@ -134,8 +159,8 @@ import { AuthService } from '../../services/auth.service';
 
         .banner-section {
             margin: -2rem -2rem 2rem -2rem;
+            text-align: center;
         }
-
 
         .banner-image {
             width: 100%;
@@ -143,25 +168,66 @@ import { AuthService } from '../../services/auth.service';
             object-fit: cover;
         }
 
-.banner-image-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--primary-shaded-70);
-        padding: 1rem;
-        margin: 0 auto;  // Center the container
-    }
+        .banner-image-container {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary-shaded-70);
+            padding: 1rem;
+            margin: 0 auto;
+        }
 
-    .section-title {
-        padding: 1rem;
-        margin: 0;
-        background-color: var(--primary-shaded-70);
-        text-align: center;  // Center the title
-    }
+        .section-title {
+            padding: 1rem;
+            margin: 0;
+            background-color: var(--primary-shaded-70);
+            text-align: center;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+        }
+
+        .clear-btn {
+            background-color: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            &:hover {
+                background-color: var(--danger);
+                color: white;
+            }
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--primary-shaded-70);
+            border-radius: 4px;
+        }
+
+        .sub-text {
+            color: var(--muted);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
     `]
 })
 export class SensorListComponent implements OnInit {
     sensors: Sensor[] = [];
+    filteredSensors: Sensor[] = [];
+    searchTerm: string = '';
     plantCareSystemId: number;
 
     constructor(
@@ -182,6 +248,7 @@ export class SensorListComponent implements OnInit {
         this.sensorService.getAll(this.plantCareSystemId).subscribe({
             next: (data) => {
                 this.sensors = data;
+                this.filteredSensors = data;
             },
             error: (error) => {
                 console.error('Error loading sensors:', error);
@@ -232,5 +299,21 @@ export class SensorListComponent implements OnInit {
 
     get isLoggedIn(): boolean {
         return this.authService.isLoggedIn();
+    }
+
+    onSearch() {
+        if (!this.searchTerm.trim()) {
+            this.filteredSensors = this.sensors;
+        } else {
+            const term = this.searchTerm.toLowerCase();
+            this.filteredSensors = this.sensors.filter(sensor => 
+                sensor.model.toLowerCase().includes(term)
+            );
+        }
+    }
+
+    clearSearch() {
+        this.searchTerm = '';
+        this.onSearch();
     }
 } 

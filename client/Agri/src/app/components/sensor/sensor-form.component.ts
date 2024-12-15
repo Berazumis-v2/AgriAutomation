@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SensorService } from '../../services/sensor.service';
 import { MessageService } from '../../services/message.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { CustomValidators } from '../../validators/custom-validators';
 
 @Component({
     selector: 'app-sensor-form',
@@ -22,8 +23,13 @@ import { HttpErrorResponse } from '@angular/common/http';
                         id="model" 
                         formControlName="model" 
                         class="input-block">
-                    <div class="text-danger" *ngIf="form.get('model')?.touched && form.get('model')?.errors?.['required']">
-                        Model is required
+                    <div class="validation-feedback" *ngIf="form.get('model')?.touched">
+                        <div *ngIf="form.get('model')?.errors?.['required']" class="text-danger">
+                            Model is required
+                        </div>
+                        <div *ngIf="form.get('model')?.errors?.['minlength'] || form.get('model')?.errors?.['maxlength']" class="text-danger">
+                            Model must be between 2 and 50 characters
+                        </div>
                     </div>
                 </div>
 
@@ -34,6 +40,9 @@ import { HttpErrorResponse } from '@angular/common/http';
                         id="temperature" 
                         formControlName="temperature" 
                         class="input-block">
+                    <div class="validation-feedback" *ngIf="form.get('temperature')?.touched && form.get('temperature')?.errors?.['temperature']" class="text-danger">
+                        {{form.get('temperature')?.errors?.['message']}}
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -43,6 +52,9 @@ import { HttpErrorResponse } from '@angular/common/http';
                         id="humidity" 
                         formControlName="humidity" 
                         class="input-block">
+                    <div class="validation-feedback" *ngIf="form.get('humidity')?.touched && form.get('humidity')?.errors?.['humidity']" class="text-danger">
+                        {{form.get('humidity')?.errors?.['message']}}
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -70,9 +82,12 @@ import { HttpErrorResponse } from '@angular/common/http';
         .container {
             max-width: 600px;
         }
+        .validation-feedback {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
         .text-danger {
             color: var(--danger);
-            font-size: 0.875rem;
         }
     `]
 })
@@ -92,9 +107,9 @@ export class SensorFormComponent implements OnInit {
         this.plantCareSystemId = Number(this.route.snapshot.paramMap.get('plantCareSystemId'));
         
         this.form = this.fb.group({
-            model: ['', Validators.required],
-            temperature: [0],
-            humidity: [0],
+            model: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+            temperature: [0, [CustomValidators.temperature]],
+            humidity: [0, [CustomValidators.humidity]],
             calibrationTimestamp: ['', Validators.required]
         });
     }
