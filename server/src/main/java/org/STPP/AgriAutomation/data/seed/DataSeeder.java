@@ -170,38 +170,45 @@ public class DataSeeder implements CommandLineRunner {
             Sensor tempSensorGH = new Sensor("TempModelGH-100", greenhouseSystem);
             tempSensorGH.setTemperature(22);
             tempSensorGH.setHumidity(55);
+            tempSensorGH.setCalibrationTimestamp(LocalDateTime.parse("2024-04-01T10:00:00"));
             tempSensorGH.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor humiditySensorGH = new Sensor("HumModelGH-200", greenhouseSystem);
             humiditySensorGH.setTemperature(23);
             humiditySensorGH.setHumidity(60);
+            humiditySensorGH.setCalibrationTimestamp(LocalDateTime.parse("2024-04-01T10:00:00"));
             humiditySensorGH.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor lightSensorGH = new Sensor("LightModelGH-300", greenhouseSystem);
             lightSensorGH.setTemperature(21);
             lightSensorGH.setHumidity(58);
+            lightSensorGH.setCalibrationTimestamp(LocalDateTime.parse("2024-04-01T10:00:00"));
             lightSensorGH.setCreatedBy(simpleUser); // Assign createdBy
 
             // Create Sensors for Outdoor System
             Sensor tempSensorOD = new Sensor("TempModelOD-100", outdoorSystem);
             tempSensorOD.setTemperature(18);
             tempSensorOD.setHumidity(40);
+            tempSensorOD.setCalibrationTimestamp(LocalDateTime.parse("2024-04-01T10:00:00"));
             tempSensorOD.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor soilMoistureSensorOD = new Sensor("SoilModelOD-200", outdoorSystem);
             soilMoistureSensorOD.setTemperature(19);
             soilMoistureSensorOD.setHumidity(45);
+            soilMoistureSensorOD.setCalibrationTimestamp(LocalDateTime.parse("2024-04-01T10:00:00"));
             soilMoistureSensorOD.setCreatedBy(simpleUser); // Assign createdBy
 
             // Create Sensors for Vertical Farm System
             Sensor tempSensorVF = new Sensor("TempModelVF-100", verticalFarmSystem);
             tempSensorVF.setTemperature(20);
             tempSensorVF.setHumidity(50);
+            tempSensorVF.setCalibrationTimestamp(LocalDateTime.parse("2024-04-01T10:00:00"));
             tempSensorVF.setCreatedBy(simpleUser); // Assign createdBy
 
             Sensor humiditySensorVF = new Sensor("HumModelVF-200", verticalFarmSystem);
             humiditySensorVF.setTemperature(21);
             humiditySensorVF.setHumidity(55);
+            humiditySensorVF.setCalibrationTimestamp(LocalDateTime.parse("2024-04-01T10:00:00"));
             humiditySensorVF.setCreatedBy(simpleUser); // Assign createdBy
 
             sensorRepository.saveAll(Arrays.asList(
@@ -232,20 +239,20 @@ public class DataSeeder implements CommandLineRunner {
             // Create Plants for Outdoor System
             Plant pumpkinPlant = new Plant();
             pumpkinPlant.setName("Pumpkin");
-            pumpkinPlant.setGrowthStage("Fruit Development");
+            pumpkinPlant.setGrowthStage("Fruiting");
             pumpkinPlant.setSensor(tempSensorOD);
             pumpkinPlant.setCreatedBy(simpleUser); // Assign createdBy
 
             Plant carrotPlant = new Plant();
             carrotPlant.setName("Carrot");
-            carrotPlant.setGrowthStage("Root Development");
+            carrotPlant.setGrowthStage("Seedling");
             carrotPlant.setSensor(soilMoistureSensorOD);
             carrotPlant.setCreatedBy(simpleUser); // Assign createdBy
 
             // Create Plants for Vertical Farm System
             Plant spinachPlant = new Plant();
             spinachPlant.setName("Spinach");
-            spinachPlant.setGrowthStage("Mature");
+            spinachPlant.setGrowthStage("Vegetative");
             spinachPlant.setSensor(tempSensorVF);
             spinachPlant.setCreatedBy(simpleUser); // Assign createdBy
 

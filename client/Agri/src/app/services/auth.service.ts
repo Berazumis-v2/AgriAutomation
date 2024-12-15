@@ -1,7 +1,7 @@
-import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, Inject, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { tap, map, catchError } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of, interval, Subscription } from 'rxjs';
+import { tap, map, catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { LoginRequest, RegisterRequest, AuthResponse } from '../interfaces/auth.interface';
 import { isPlatformBrowser } from '@angular/common';
@@ -10,10 +10,12 @@ import { Router } from '@angular/router';
 @Injectable({
     providedIn: 'root'
 })
-export class AuthService {
+export class AuthService implements OnDestroy {
     private currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
     private isBrowser: boolean;
+    private refreshInterval?: Subscription;
+    private readonly REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes in milliseconds
 
     constructor(
         private http: HttpClient,
@@ -25,6 +27,7 @@ export class AuthService {
             const savedToken = localStorage.getItem('accessToken');
             if (savedToken) {
                 this.currentUserSubject.next({ accessToken: savedToken, refreshToken: '' });
+                this.startTokenRefresh();
             }
         }
     }
@@ -40,6 +43,7 @@ export class AuthService {
                     localStorage.setItem('accessToken', response.accessToken);
                 }
                 this.currentUserSubject.next(response);
+                this.startTokenRefresh();
             })
         );
     }
@@ -57,11 +61,47 @@ export class AuthService {
     }
 
     logout(): void {
+        this.stopTokenRefresh();
         if (this.isBrowser) {
             localStorage.removeItem('accessToken');
         }
         this.currentUserSubject.next(null);
-        this.router.navigate(['/login']);
+        
+        // Call logout endpoint to clear refresh token cookie
+        this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
+            .subscribe({
+                complete: () => this.router.navigate(['/login'])
+            });
+    }
+
+    private startTokenRefresh(): void {
+        // Clear any existing interval
+        this.stopTokenRefresh();
+
+        // Start new interval
+        this.refreshInterval = interval(this.REFRESH_INTERVAL)
+            .pipe(
+                switchMap(() => this.refreshToken())
+            )
+            .subscribe({
+                error: (error) => {
+                    console.error('Token refresh failed:', error);
+                    if (error.status === 401) {
+                        this.logout();
+                    }
+                }
+            });
+    }
+
+    private stopTokenRefresh(): void {
+        if (this.refreshInterval) {
+            this.refreshInterval.unsubscribe();
+            this.refreshInterval = undefined;
+        }
+    }
+
+    ngOnDestroy(): void {
+        this.stopTokenRefresh();
     }
 
     isLoggedIn(): boolean {
