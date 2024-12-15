@@ -5,6 +5,7 @@ import { PlantCareSystemService } from '../../services/plant-care-system.service
 import { PlantCareSystem } from '../../interfaces/plant-care-system.interface';
 import { MessageService } from '../../services/message.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-plant-care-list',
@@ -12,54 +13,110 @@ import { HttpErrorResponse } from '@angular/common/http';
     imports: [CommonModule, RouterLink],
     template: `
         <div class="paper container">
-            <div class="row">
-                <div class="col-fill">
-                    <h2>Plant Care Systems</h2>
+            <div class="banner-section">
+                <div class="banner-image-container">
+                    <img src="care-systems.jpg" alt="Agricultural Systems" class="height-[20%]">
                 </div>
-                <div class="col">
-                    <a routerLink="new" class="paper-btn btn-primary">Add New System</a>
-                </div>
+                <h2 class="section-title text-center">Plant Care Systems</h2>
             </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Automation</th>
-                                <th>Maintenance Date</th>
-                                <th>Created By</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let system of systems">
-                                <td>{{system.name}}</td>
-                                <td>{{system.description}}</td>
-                                <td>{{system.automationEnabled ? 'Enabled' : 'Disabled'}}</td>
-                                <td>{{system.maintenanceTimeStamp | date:'medium'}}</td>
-                                <td>{{system.createdBy.username}}</td>
-                                <td>
-                                    <div class="row flex-edges">
-                                        <button class="btn-small" (click)="editSystem(system.id)">Edit</button>
-                                        <button class="btn-small" (click)="viewSensors(system.id)">Sensors</button>
-                                        <button class="btn-small btn-danger" (click)="deleteSystem(system.id)">Delete</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            
+            <a *ngIf="isLoggedIn" routerLink="new" class="paper-btn btn-primary btn-block margin-bottom text-center">
+                Add New System
+            </a>
+            
+            <div class="grid-container">
+                <div class="card system-card" *ngFor="let system of systems">
+                    <div class="card-body">
+                        <h4 class="card-title">{{system.name}}</h4>
+                        <p class="description">{{system.description}}</p>
+                        <div class="details">
+                            <p><strong>Automation:</strong> {{system.automationEnabled ? 'Enabled' : 'Disabled'}}</p>
+                            <p><strong>Maintenance:</strong> {{system.maintenanceTimeStamp | date:'medium'}}</p>
+                            <p><strong>Created By:</strong> {{system.createdBy.username}}</p>
+                        </div>
+                        <div *ngIf="isLoggedIn" class="actions">
+                            <button class="btn-small" (click)="editSystem(system.id)">Edit</button>
+                            <button class="btn-small" (click)="viewSensors(system.id)">Sensors</button>
+                            <button class="btn-small btn-danger" (click)="deleteSystem(system.id)">Delete</button>
+                        </div>
+                        <div *ngIf="!isLoggedIn" class="actions">
+                            <button class="btn-small" (click)="viewSensors(system.id)">Sensors</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     `,
     styles: [`
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .system-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .description {
+            flex-grow: 1;
+            margin: 0.5rem 0;
+        }
+
+        .details {
+            margin: 1rem 0;
+            p {
+                margin: 0.25rem 0;
+            }
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: auto;
+        }
+
         .btn-small {
             padding: 0.2rem 0.4rem;
-            margin: 0 0.2rem;
         }
+
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+         .banner-section {
+        margin: -2rem -2rem 2rem -2rem;
+        text-align: center;  // Center the section content
+    }
+
+    .banner-image-container {
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--primary-shaded-70);
+        padding: 1rem;
+        margin: 0 auto;  // Center the container
+    }
+
+    .section-title {
+        padding: 1rem;
+        margin: 0;
+        background-color: var(--primary-shaded-70);
+        text-align: center;  // Center the title
+    }
     `]
 })
 export class PlantCareListComponent implements OnInit {
@@ -68,7 +125,8 @@ export class PlantCareListComponent implements OnInit {
     constructor(
         private plantCareService: PlantCareSystemService,
         private router: Router,
-        private messageService: MessageService
+        private messageService: MessageService,
+        private authService: AuthService
     ) {}
 
     ngOnInit() {
@@ -122,5 +180,9 @@ export class PlantCareListComponent implements OnInit {
 
     viewSensors(id: number) {
         this.router.navigate(['/plant-care-systems', id, 'sensors']);
+    }
+
+    get isLoggedIn(): boolean {
+        return this.authService.isLoggedIn();
     }
 } 

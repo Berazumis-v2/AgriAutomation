@@ -23,10 +23,10 @@ import { MessageComponent } from '../../components/shared/message.component';
                 </label>
                 <div class="collapsible-body">
                     <ul class="inline">
+                        <li><a routerLink="/plant-care-systems">Plant Care Systems</a></li>
                         <li *ngIf="!isLoggedIn"><a routerLink="/login">Login</a></li>
                         <li *ngIf="!isLoggedIn"><a routerLink="/register">Register</a></li>
                         <li *ngIf="isLoggedIn"><a routerLink="/dashboard">Dashboard</a></li>
-                        <li *ngIf="isLoggedIn"><a routerLink="/plant-care-systems">Plant Care Systems</a></li>
                         <li *ngIf="isLoggedIn"><a href="#" (click)="logout($event)">Logout</a></li>
                     </ul>
                 </div>

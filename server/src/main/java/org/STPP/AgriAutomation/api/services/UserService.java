@@ -121,4 +121,8 @@ public class UserService {
     public Optional<User> findByUsername(String username) {
         return userRepo.findByUsername(username);
     }
+
+    public void validateRefreshToken(String token) {
+        jwtService.validateToken(token);
+    }
 }

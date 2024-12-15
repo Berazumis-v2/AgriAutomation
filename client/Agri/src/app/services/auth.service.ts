@@ -1,7 +1,7 @@
 import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { tap, map, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { LoginRequest, RegisterRequest, AuthResponse } from '../interfaces/auth.interface';
 import { isPlatformBrowser } from '@angular/common';
@@ -30,15 +30,18 @@ export class AuthService {
     }
 
     login(credentials: LoginRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, credentials)
-            .pipe(
-                tap(response => {
-                    if (this.isBrowser) {
-                        localStorage.setItem('accessToken', response.accessToken);
-                    }
-                    this.currentUserSubject.next(response);
-                })
-            );
+        return this.http.post<AuthResponse>(
+            `${environment.apiUrl}/auth/login`, 
+            credentials,
+            { withCredentials: true }
+        ).pipe(
+            tap(response => {
+                if (this.isBrowser) {
+                    localStorage.setItem('accessToken', response.accessToken);
+                }
+                this.currentUserSubject.next(response);
+            })
+        );
     }
 
     register(userData: RegisterRequest): Observable<AuthResponse> {
@@ -67,5 +70,30 @@ export class AuthService {
 
     getToken(): string | null {
         return this.currentUserSubject.value?.accessToken || null;
+    }
+
+    checkRefreshToken(): Observable<boolean> {
+        return this.http.get<boolean>(
+            `${environment.apiUrl}/auth/check-token`,
+            { withCredentials: true }
+        ).pipe(
+            map(() => true),
+            catchError(() => of(false))
+        );
+    }
+
+    refreshToken(): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(
+            `${environment.apiUrl}/auth/refresh-token`,
+            {},
+            { withCredentials: true }
+        ).pipe(
+            tap(response => {
+                if (this.isBrowser) {
+                    localStorage.setItem('accessToken', response.accessToken);
+                }
+                this.currentUserSubject.next(response);
+            })
+        );
     }
 }

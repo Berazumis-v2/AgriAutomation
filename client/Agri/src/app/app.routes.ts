@@ -38,7 +38,6 @@ export const routes: Routes = [
             {
                 path: '',  // This matches /plant-care-systems
                 component: PlantCareListComponent,
-                canActivate: [authGuard]
             },
             {
                 path: 'new',  // This matches /plant-care-systems/new
@@ -56,7 +55,6 @@ export const routes: Routes = [
                     {
                         path: '',
                         component: SensorListComponent,
-                        canActivate: [authGuard]
                     },
                     {
                         path: 'new',
@@ -74,7 +72,6 @@ export const routes: Routes = [
                             {
                                 path: '',
                                 component: PlantListComponent,
-                                canActivate: [authGuard]
                             },
                             {
                                 path: 'new',

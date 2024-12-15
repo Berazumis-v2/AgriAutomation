@@ -12,6 +12,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,10 +40,10 @@ public class UserController {
         // Create HttpOnly cookie for refresh token
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(true) // Set to true in production
-                .path("/auth")
+                .secure(false) // Set to false for local development
+                .path("/")    // Changed from /auth to / to make cookie available everywhere
                 .maxAge(3 * 24 * 60 * 60) // 3 days in seconds
-                .sameSite("Strict")
+                .sameSite("Lax")  // Changed from Strict to Lax for development
                 .build();
 
         return ResponseEntity.ok()
@@ -54,13 +55,12 @@ public class UserController {
     public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refreshToken") String refreshToken) {
         AuthResponse authResponse = service.refreshAccessToken(refreshToken);
 
-        // Create new HttpOnly cookie for new refresh token
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(true) // Set to true in production
-                .path("/auth")
-                .maxAge(3 * 24 * 60 * 60) // 3 days in seconds
-                .sameSite("Strict")
+                .secure(false) // Set to false for local development
+                .path("/")    // Changed from /auth to / to make cookie available everywhere
+                .maxAge(3 * 24 * 60 * 60)
+                .sameSite("Lax")  // Changed from Strict to Lax for development
                 .build();
 
         return ResponseEntity.ok()
@@ -71,17 +71,31 @@ public class UserController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@CookieValue(name = "refreshToken") String refreshToken) {
         service.logout(refreshToken);
-        // Clear the refresh token cookie
+        
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true) // Set to true in production
-                .path("/auth")
+                .secure(false) // Set to false for local development
+                .path("/")    // Changed from /auth to / to make cookie available everywhere
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("Lax")  // Changed from Strict to Lax for development
                 .build();
 
         return ResponseEntity.ok()
                 .header("Set-Cookie", cookie.toString())
                 .body("Logged out successfully");
+    }
+
+    @GetMapping("/check-token")
+    public ResponseEntity<Boolean> checkRefreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            try {
+                // Validate the token
+                service.validateRefreshToken(refreshToken);
+                return ResponseEntity.ok(true);
+            } catch (Exception e) {
+                return ResponseEntity.ok(false);
+            }
+        }
+        return ResponseEntity.ok(false);
     }
 }
