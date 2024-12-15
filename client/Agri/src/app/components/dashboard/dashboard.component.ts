@@ -8,7 +8,10 @@ import { AuthService } from '../../services/auth.service';
     imports: [CommonModule],
     template: `
         <div class="paper container">
-            <h2 class="text-center">Dashboard</h2>
+            <div class="dashboard-header">
+                <h2 class="text-center">Dashboard</h2>
+                <img src="plant_juicy_fish.svg" alt="Plant Dashboard Icon" class="dashboard-icon">
+            </div>
             
             <div class="card margin-bottom">
                 <div class="card-body">
@@ -93,6 +96,29 @@ import { AuthService } from '../../services/auth.service';
         }
         .margin-right {
             margin-right: 0.5rem;
+        }
+        .dashboard-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .dashboard-icon {
+            width: 200px;
+            height: auto;
+            margin: 1rem 0;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
         }
     `]
 })

@@ -26,10 +26,27 @@ export class AuthService implements OnDestroy {
     ) {
         this.isBrowser = isPlatformBrowser(platformId);
         if (this.isBrowser) {
+            // Check for existing token on service initialization
             const savedToken = localStorage.getItem('accessToken');
             if (savedToken) {
-                this.currentUserSubject.next({ accessToken: savedToken, refreshToken: '' });
-                this.startTokenRefresh();
+                // Verify token validity with backend
+                this.checkRefreshToken().subscribe({
+                    next: (isValid) => {
+                        if (isValid) {
+                            this.currentUserSubject.next({ accessToken: savedToken, refreshToken: '' });
+                            this.startTokenRefresh();
+                        } else {
+                            // Token is invalid, clear it
+                            localStorage.removeItem('accessToken');
+                            this.currentUserSubject.next(null);
+                        }
+                    },
+                    error: () => {
+                        // On error, clear token
+                        localStorage.removeItem('accessToken');
+                        this.currentUserSubject.next(null);
+                    }
+                });
             }
         }
     }
@@ -63,7 +80,10 @@ export class AuthService implements OnDestroy {
     }
 
     logout(): void {
+        // First, stop the refresh interval
         this.stopTokenRefresh();
+
+        // Clear local storage and user state
         if (this.isBrowser) {
             localStorage.removeItem('accessToken');
         }
@@ -72,7 +92,21 @@ export class AuthService implements OnDestroy {
         // Call logout endpoint to clear refresh token cookie
         this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
             .subscribe({
-                complete: () => this.router.navigate(['/login'])
+                next: () => {
+                    this.messageService.showSuccess('Logged out successfully');
+                    // Ensure navigation happens after state cleanup
+                    this.router.navigate(['/login']).then(() => {
+                        // Optional: Reload the page to ensure clean state
+                        if (this.isBrowser) {
+                            window.location.reload();
+                        }
+                    });
+                },
+                error: () => {
+                    this.messageService.showError('Error during logout');
+                    // Still navigate to login even if server logout fails
+                    this.router.navigate(['/login']);
+                }
             });
     }
 
