@@ -44,6 +44,12 @@ import { Subscription } from 'rxjs';
             border: 1px solid #ffeeba;
         }
 
+        .info {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
         .close-btn {
             background: none;
             border: none;

@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import { LoginRequest, RegisterRequest, AuthResponse } from '../interfaces/auth.interface';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
+import { MessageService } from '../services/message.service';
 
 @Injectable({
     providedIn: 'root'
@@ -20,7 +21,8 @@ export class AuthService implements OnDestroy {
     constructor(
         private http: HttpClient,
         @Inject(PLATFORM_ID) platformId: Object,
-        private router: Router
+        private router: Router,
+        private messageService: MessageService
     ) {
         this.isBrowser = isPlatformBrowser(platformId);
         if (this.isBrowser) {
@@ -81,11 +83,23 @@ export class AuthService implements OnDestroy {
         // Start new interval
         this.refreshInterval = interval(this.REFRESH_INTERVAL)
             .pipe(
-                switchMap(() => this.refreshToken())
+                switchMap(() => {
+                    this.messageService.showInfo('Refreshing access token...');
+                    return this.refreshToken();
+                })
             )
             .subscribe({
+                next: (response) => {
+                    if (this.isBrowser) {
+                        localStorage.setItem('accessToken', response.accessToken);
+                    }
+                    // Make sure to update the current user state
+                    this.currentUserSubject.next(response);
+                    this.messageService.showSuccess('Access token refreshed successfully');
+                },
                 error: (error) => {
                     console.error('Token refresh failed:', error);
+                    this.messageService.showError('Token refresh failed. Please log in again.');
                     if (error.status === 401) {
                         this.logout();
                     }
@@ -133,6 +147,26 @@ export class AuthService implements OnDestroy {
                     localStorage.setItem('accessToken', response.accessToken);
                 }
                 this.currentUserSubject.next(response);
+            })
+        );
+    }
+
+    // Add method to handle token refresh from interceptor
+    handleTokenRefresh(): Observable<AuthResponse> {
+        this.messageService.showInfo('Session expired. Refreshing token...');
+        return this.refreshToken().pipe(
+            tap({
+                next: (response) => {
+                    if (this.isBrowser) {
+                        localStorage.setItem('accessToken', response.accessToken);
+                    }
+                    this.currentUserSubject.next(response);
+                    this.messageService.showSuccess('Session refreshed successfully');
+                },
+                error: (error) => {
+                    this.messageService.showError('Session refresh failed. Please log in again.');
+                    this.logout();
+                }
             })
         );
     }

@@ -41,7 +41,7 @@ function handle401Error(
     if (!isRefreshing) {
         isRefreshing = true;
 
-        return authService.refreshToken().pipe(
+        return authService.handleTokenRefresh().pipe(
             switchMap((response) => {
                 isRefreshing = false;
                 return next(addToken(request, response.accessToken));

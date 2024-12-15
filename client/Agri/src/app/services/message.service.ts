@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 
 export interface Message {
     text: string;
-    type: 'error' | 'success' | 'warning';
+    type: 'error' | 'success' | 'warning' | 'info';
 }
 
 @Injectable({
@@ -23,6 +23,10 @@ export class MessageService {
 
     showWarning(text: string) {
         this.messageSubject.next({ text, type: 'warning' });
+    }
+
+    showInfo(text: string) {
+        this.messageSubject.next({ text, type: 'info' });
     }
 
     clear() {
