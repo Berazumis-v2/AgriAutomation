@@ -7,11 +7,12 @@ import { MessageService } from '../../services/message.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
+import { ConfirmationModalComponent } from '../shared/confirmation-modal.component';
 
 @Component({
     selector: 'app-plant-care-list',
     standalone: true,
-    imports: [CommonModule, RouterLink, FormsModule],
+    imports: [CommonModule, RouterLink, FormsModule, ConfirmationModalComponent],
     template: `
         <div class="paper container">
             <div class="banner-section">
@@ -60,7 +61,7 @@ import { FormsModule } from '@angular/forms';
                         <div *ngIf="isLoggedIn" class="actions">
                             <button class="btn-small" (click)="editSystem(system.id)">Edit</button>
                             <button class="btn-small" (click)="viewSensors(system.id)">Sensors</button>
-                            <button class="btn-small btn-danger" (click)="deleteSystem(system.id)">Delete</button>
+                            <button class="btn-small btn-danger" (click)="deleteSystem(system)">Delete</button>
                         </div>
                         <div *ngIf="!isLoggedIn" class="actions">
                             <button class="btn-small" (click)="viewSensors(system.id)">Sensors</button>
@@ -68,6 +69,13 @@ import { FormsModule } from '@angular/forms';
                     </div>
                 </div>
             </div>
+
+            <app-confirmation-modal
+                [show]="showDeleteModal"
+                [itemName]="systemToDelete?.name || ''"
+                (confirm)="confirmDelete()"
+                (cancel)="cancelDelete()"
+            ></app-confirmation-modal>
         </div>
     `,
     styles: [`
@@ -184,6 +192,8 @@ export class PlantCareListComponent implements OnInit {
     systems: PlantCareSystem[] = [];
     filteredSystems: PlantCareSystem[] = [];
     searchTerm: string = '';
+    showDeleteModal = false;
+    systemToDelete: PlantCareSystem | null = null;
 
     constructor(
         private plantCareService: PlantCareSystemService,
@@ -209,12 +219,17 @@ export class PlantCareListComponent implements OnInit {
         });
     }
 
-    deleteSystem(id: number) {
-        if (confirm('Are you sure you want to delete this system?')) {
-            this.plantCareService.delete(id).subscribe({
+    deleteSystem(system: PlantCareSystem) {
+        this.systemToDelete = system;
+        this.showDeleteModal = true;
+    }
+
+    confirmDelete() {
+        if (this.systemToDelete) {
+            this.plantCareService.delete(this.systemToDelete.id).subscribe({
                 next: () => {
-                    this.loadSystems();
                     this.messageService.showSuccess('System deleted successfully');
+                    this.loadSystems();
                 },
                 error: (error: HttpErrorResponse) => {
                     if (error.status === 403) {
@@ -225,6 +240,13 @@ export class PlantCareListComponent implements OnInit {
                 }
             });
         }
+        this.showDeleteModal = false;
+        this.systemToDelete = null;
+    }
+
+    cancelDelete() {
+        this.showDeleteModal = false;
+        this.systemToDelete = null;
     }
 
     editSystem(id: number) {
