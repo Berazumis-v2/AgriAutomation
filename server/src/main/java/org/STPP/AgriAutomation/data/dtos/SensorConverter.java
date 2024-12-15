@@ -37,9 +37,9 @@ public class SensorConverter {
         sensor.setModel(dto.getModel());
         sensor.setTemperature(dto.getTemperature());
         sensor.setHumidity(dto.getHumidity());
+        sensor.setCalibrationTimestamp(dto.getCalibrationTimestamp());
         sensor.setPlantCareSystem(plantCareSystem);
         sensor.setCreatedBy(createdBy);
-        // Timestamps will be handled by lifecycle callbacks (@PrePersist, @PreUpdate)
         return sensor;
     }
 }

@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
 
 @Entity
 public class PlantCareSystem {
@@ -61,11 +60,4 @@ public class PlantCareSystem {
     public User getCreatedBy() { return createdBy; }
 
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
-
-    @PrePersist
-    protected void onCreate() {
-        if (this.maintenanceTimeStamp == null) {
-            this.maintenanceTimeStamp = LocalDateTime.now();
-        }
-    }
 }

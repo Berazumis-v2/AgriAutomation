@@ -45,6 +45,18 @@ import { HttpErrorResponse } from '@angular/common/http';
                         class="input-block">
                 </div>
 
+                <div class="form-group">
+                    <label for="calibrationTimestamp">Calibration Date</label>
+                    <input 
+                        type="datetime-local" 
+                        id="calibrationTimestamp" 
+                        formControlName="calibrationTimestamp" 
+                        class="input-block">
+                    <div class="text-danger" *ngIf="form.get('calibrationTimestamp')?.touched && form.get('calibrationTimestamp')?.errors?.['required']">
+                        Calibration date is required
+                    </div>
+                </div>
+
                 <div class="row flex-edges">
                     <button type="button" class="btn-secondary" (click)="goBack()">Cancel</button>
                     <button type="submit" class="btn-primary" [disabled]="!form.valid">
@@ -53,7 +65,16 @@ import { HttpErrorResponse } from '@angular/common/http';
                 </div>
             </form>
         </div>
-    `
+    `,
+    styles: [`
+        .container {
+            max-width: 600px;
+        }
+        .text-danger {
+            color: var(--danger);
+            font-size: 0.875rem;
+        }
+    `]
 })
 export class SensorFormComponent implements OnInit {
     form: FormGroup;
@@ -73,7 +94,8 @@ export class SensorFormComponent implements OnInit {
         this.form = this.fb.group({
             model: ['', Validators.required],
             temperature: [0],
-            humidity: [0]
+            humidity: [0],
+            calibrationTimestamp: ['', Validators.required]
         });
     }
 
@@ -82,16 +104,27 @@ export class SensorFormComponent implements OnInit {
         if (this.sensorId) {
             this.isEditing = true;
             this.loadSensor(this.sensorId);
+        } else {
+            // Set default calibration timestamp to current date/time for new sensors
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            this.form.patchValue({
+                calibrationTimestamp: now.toISOString().slice(0, 16)
+            });
         }
     }
 
     loadSensor(id: number) {
         this.sensorService.getById(this.plantCareSystemId, id).subscribe({
             next: (sensor) => {
+                const calibrationDate = new Date(sensor.calibrationTimestamp);
+                calibrationDate.setMinutes(calibrationDate.getMinutes() - calibrationDate.getTimezoneOffset());
+                
                 this.form.patchValue({
                     model: sensor.model,
                     temperature: sensor.temperature,
-                    humidity: sensor.humidity
+                    humidity: sensor.humidity,
+                    calibrationTimestamp: calibrationDate.toISOString().slice(0, 16)
                 });
             },
             error: (error) => {

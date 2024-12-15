@@ -1,8 +1,11 @@
 package org.STPP.AgriAutomation.data.dtos;
 
-import jakarta.validation.constraints.NotBlank;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class PlantCareSystemRequestDTO {
 
@@ -12,11 +15,8 @@ public class PlantCareSystemRequestDTO {
     private String description;
     private boolean automationEnabled;
 
-    /**
-     * maintenanceTimeStamp is optional during creation.
-     * If not provided, it will be set to the current time by the system.
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @NotNull(message = "Maintenance timestamp is mandatory")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime maintenanceTimeStamp;
 
     public PlantCareSystemRequestDTO() {}

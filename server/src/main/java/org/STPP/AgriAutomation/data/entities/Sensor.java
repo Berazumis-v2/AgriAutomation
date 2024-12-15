@@ -84,14 +84,17 @@ public class Sensor {
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();
         this.readingTimestamp = now;
-        this.calibrationTimestamp = now;
     }
 
     @PreUpdate
     public void preUpdate() {
         LocalDateTime now = LocalDateTime.now();
         this.readingTimestamp = now;
-        this.calibrationTimestamp = now;
+    }
+
+    // Add setter for calibrationTimestamp
+    public void setCalibrationTimestamp(LocalDateTime calibrationTimestamp) {
+        this.calibrationTimestamp = calibrationTimestamp;
     }
 }
 

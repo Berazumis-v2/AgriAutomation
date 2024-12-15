@@ -15,4 +15,5 @@ export interface SensorRequest {
     model: string;
     temperature: number;
     humidity: number;
+    calibrationTimestamp: string;
 } 

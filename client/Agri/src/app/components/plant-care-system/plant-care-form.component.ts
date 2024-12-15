@@ -37,6 +37,18 @@ import { HttpErrorResponse } from '@angular/common/http';
                 </div>
 
                 <div class="form-group">
+                    <label for="maintenanceTimeStamp">Maintenance Date</label>
+                    <input 
+                        type="datetime-local" 
+                        id="maintenanceTimeStamp" 
+                        formControlName="maintenanceTimeStamp" 
+                        class="input-block">
+                    <div class="text-danger" *ngIf="form.get('maintenanceTimeStamp')?.touched && form.get('maintenanceTimeStamp')?.errors?.['required']">
+                        Maintenance date is required
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label>
                         <input 
                             type="checkbox" 
@@ -70,7 +82,8 @@ export class PlantCareFormComponent implements OnInit {
         this.form = this.fb.group({
             name: ['', Validators.required],
             description: [''],
-            automationEnabled: [false]
+            automationEnabled: [false],
+            maintenanceTimeStamp: ['', Validators.required]
         });
     }
 
@@ -79,21 +92,30 @@ export class PlantCareFormComponent implements OnInit {
         if (this.systemId) {
             this.isEditing = true;
             this.loadSystem(this.systemId);
+        } else {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            this.form.patchValue({
+                maintenanceTimeStamp: now.toISOString().slice(0, 16)
+            });
         }
     }
 
     loadSystem(id: number) {
         this.plantCareService.getById(id).subscribe({
             next: (system) => {
+                const maintenanceDate = new Date(system.maintenanceTimeStamp);
+                maintenanceDate.setMinutes(maintenanceDate.getMinutes() - maintenanceDate.getTimezoneOffset());
+                
                 this.form.patchValue({
                     name: system.name,
                     description: system.description,
-                    automationEnabled: system.automationEnabled
+                    automationEnabled: system.automationEnabled,
+                    maintenanceTimeStamp: maintenanceDate.toISOString().slice(0, 16)
                 });
             },
             error: (error) => {
                 console.error('Error loading system:', error);
-                // Add error handling
             }
         });
     }

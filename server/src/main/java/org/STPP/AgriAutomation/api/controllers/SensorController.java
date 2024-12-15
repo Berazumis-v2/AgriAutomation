@@ -129,6 +129,7 @@ public class SensorController {
         existingSensor.setModel(requestDTO.getModel());
         existingSensor.setTemperature(requestDTO.getTemperature());
         existingSensor.setHumidity(requestDTO.getHumidity());
+        existingSensor.setCalibrationTimestamp(requestDTO.getCalibrationTimestamp());
 
         Sensor updatedSensor = sensorService.save(existingSensor);
 
