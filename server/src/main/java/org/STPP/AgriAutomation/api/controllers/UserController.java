@@ -69,15 +69,17 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken") String refreshToken) {
-        service.logout(refreshToken);
+    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
+        if (refreshToken != null && !refreshToken.isEmpty()) {
+            service.logout(refreshToken);
+        }
         
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false) // Set to false for local development
-                .path("/")    // Changed from /auth to / to make cookie available everywhere
+                .secure(false)
+                .path("/")
                 .maxAge(0)
-                .sameSite("Lax")  // Changed from Strict to Lax for development
+                .sameSite("Lax")
                 .build();
 
         return ResponseEntity.ok()

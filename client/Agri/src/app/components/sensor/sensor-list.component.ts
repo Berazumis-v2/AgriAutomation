@@ -33,8 +33,14 @@ import { FormsModule } from '@angular/forms';
                         (input)="onSearch()"
                         placeholder="Search by model..."
                         class="search-input">
+                    <input 
+                        type="number" 
+                        [(ngModel)]="searchId" 
+                        (input)="onSearch()"
+                        placeholder="ID"
+                        class="id-input">
                     <button 
-                        *ngIf="searchTerm" 
+                        *ngIf="searchTerm || searchId" 
                         (click)="clearSearch()" 
                         class="btn-small clear-btn">
                         Clear
@@ -50,7 +56,10 @@ import { FormsModule } from '@angular/forms';
             <div class="grid-container" *ngIf="filteredSensors.length > 0">
                 <div class="card sensor-card" *ngFor="let sensor of filteredSensors">
                     <div class="card-body">
-                        <h4 class="card-title">{{sensor.model}}</h4>
+                        <div class="card-header">
+                            <span class="sensor-id">#{{sensor.id}}</span>
+                            <h4 class="card-title">{{sensor.model}}</h4>
+                        </div>
                         <div class="readings">
                             <div class="reading-item">
                                 <span class="label">Temperature:</span>
@@ -222,12 +231,36 @@ import { FormsModule } from '@angular/forms';
             font-size: 0.875rem;
             margin-top: 0.5rem;
         }
+
+        .card-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sensor-id {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-weight: normal;
+        }
+
+        .card-title {
+            margin: 0;
+            flex: 1;
+        }
+
+        .id-input {
+            width: 80px;
+            text-align: center;
+        }
     `]
 })
 export class SensorListComponent implements OnInit {
     sensors: Sensor[] = [];
     filteredSensors: Sensor[] = [];
     searchTerm: string = '';
+    searchId: string = '';
     plantCareSystemId: number;
 
     constructor(
@@ -302,18 +335,16 @@ export class SensorListComponent implements OnInit {
     }
 
     onSearch() {
-        if (!this.searchTerm.trim()) {
-            this.filteredSensors = this.sensors;
-        } else {
-            const term = this.searchTerm.toLowerCase();
-            this.filteredSensors = this.sensors.filter(sensor => 
-                sensor.model.toLowerCase().includes(term)
-            );
-        }
+        this.filteredSensors = this.sensors.filter(sensor => {
+            const modelMatch = sensor.model.toLowerCase().includes(this.searchTerm.toLowerCase());
+            const idMatch = this.searchId ? sensor.id === Number(this.searchId) : true;
+            return modelMatch && idMatch;
+        });
     }
 
     clearSearch() {
         this.searchTerm = '';
-        this.onSearch();
+        this.searchId = '';
+        this.filteredSensors = this.sensors;
     }
 } 

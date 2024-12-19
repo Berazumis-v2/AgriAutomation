@@ -34,8 +34,14 @@ import { ConfirmationModalComponent } from '../shared/confirmation-modal.compone
                         (input)="onSearch()"
                         placeholder="Search by name..."
                         class="search-input">
+                    <input 
+                        type="number" 
+                        [(ngModel)]="searchId" 
+                        (input)="onSearch()"
+                        placeholder="ID"
+                        class="id-input">
                     <button 
-                        *ngIf="searchTerm" 
+                        *ngIf="searchTerm || searchId" 
                         (click)="clearSearch()" 
                         class="btn-small clear-btn">
                         Clear
@@ -51,7 +57,10 @@ import { ConfirmationModalComponent } from '../shared/confirmation-modal.compone
             <div class="grid-container" *ngIf="filteredSystems.length > 0">
                 <div class="card system-card" *ngFor="let system of filteredSystems">
                     <div class="card-body">
-                        <h4 class="card-title">{{system.name}}</h4>
+                        <div class="card-header">
+                            <span class="system-id">#{{system.id}}</span>
+                            <h4 class="card-title">{{system.name}}</h4>
+                        </div>
                         <p class="description">{{system.description}}</p>
                         <div class="details">
                             <p><strong>Automation:</strong> {{system.automationEnabled ? 'Enabled' : 'Disabled'}}</p>
@@ -164,6 +173,11 @@ import { ConfirmationModalComponent } from '../shared/confirmation-modal.compone
         flex: 1;
     }
 
+    .id-input {
+        width: 80px;
+        text-align: center;
+    }
+
     .clear-btn {
         background-color: var(--danger-light);
         color: var(--danger);
@@ -186,12 +200,31 @@ import { ConfirmationModalComponent } from '../shared/confirmation-modal.compone
         font-size: 0.875rem;
         margin-top: 0.5rem;
     }
+
+    .card-header {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .system-id {
+        font-size: 0.75rem;
+        color: var(--muted);
+        font-weight: normal;
+    }
+
+    .card-title {
+        margin: 0;
+        flex: 1;
+    }
     `]
 })
 export class PlantCareListComponent implements OnInit {
     systems: PlantCareSystem[] = [];
     filteredSystems: PlantCareSystem[] = [];
     searchTerm: string = '';
+    searchId: string = '';
     showDeleteModal = false;
     systemToDelete: PlantCareSystem | null = null;
 
@@ -273,11 +306,16 @@ export class PlantCareListComponent implements OnInit {
     }
 
     onSearch() {
-        this.filteredSystems = this.systems.filter(system => system.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
+        this.filteredSystems = this.systems.filter(system => {
+            const nameMatch = system.name.toLowerCase().includes(this.searchTerm.toLowerCase());
+            const idMatch = this.searchId ? system.id === Number(this.searchId) : true;
+            return nameMatch && idMatch;
+        });
     }
 
     clearSearch() {
         this.searchTerm = '';
-        this.onSearch();
+        this.searchId = '';
+        this.filteredSystems = this.systems;
     }
 } 

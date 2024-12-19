@@ -33,8 +33,14 @@ import { FormsModule } from '@angular/forms';
                         (input)="onSearch()"
                         placeholder="Search by name..."
                         class="search-input">
+                    <input 
+                        type="number" 
+                        [(ngModel)]="searchId" 
+                        (input)="onSearch()"
+                        placeholder="ID"
+                        class="id-input">
                     <button 
-                        *ngIf="searchTerm" 
+                        *ngIf="searchTerm || searchId" 
                         (click)="clearSearch()" 
                         class="btn-small clear-btn">
                         Clear
@@ -50,7 +56,10 @@ import { FormsModule } from '@angular/forms';
             <div class="grid-container" *ngIf="filteredPlants.length > 0">
                 <div class="card plant-card" *ngFor="let plant of filteredPlants">
                     <div class="card-body">
-                        <h4 class="card-title">{{plant.name}}</h4>
+                        <div class="card-header">
+                            <span class="plant-id">#{{plant.id}}</span>
+                            <h4 class="card-title">{{plant.name}}</h4>
+                        </div>
                         <div class="growth-stage">
                             <span class="stage-label">Growth Stage:</span>
                             <span class="stage-value">{{plant.growthStage}}</span>
@@ -207,6 +216,29 @@ import { FormsModule } from '@angular/forms';
             font-size: 0.875rem;
             margin-top: 0.5rem;
         }
+
+        .card-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .plant-id {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-weight: normal;
+        }
+
+        .card-title {
+            margin: 0;
+            flex: 1;
+        }
+
+        .id-input {
+            width: 80px;
+            text-align: center;
+        }
     `]
 })
 export class PlantListComponent implements OnInit {
@@ -215,6 +247,7 @@ export class PlantListComponent implements OnInit {
     plantCareSystemId: number;
     sensorId: number;
     searchTerm: string = '';
+    searchId: string = '';
 
     constructor(
         private plantService: PlantService,
@@ -285,18 +318,16 @@ export class PlantListComponent implements OnInit {
     }
 
     onSearch() {
-        if (!this.searchTerm.trim()) {
-            this.filteredPlants = this.plants;
-        } else {
-            const term = this.searchTerm.toLowerCase();
-            this.filteredPlants = this.plants.filter(plant => 
-                plant.name.toLowerCase().includes(term)
-            );
-        }
+        this.filteredPlants = this.plants.filter(plant => {
+            const nameMatch = plant.name.toLowerCase().includes(this.searchTerm.toLowerCase());
+            const idMatch = this.searchId ? plant.id === Number(this.searchId) : true;
+            return nameMatch && idMatch;
+        });
     }
 
     clearSearch() {
         this.searchTerm = '';
-        this.onSearch();
+        this.searchId = '';
+        this.filteredPlants = this.plants;
     }
 } 

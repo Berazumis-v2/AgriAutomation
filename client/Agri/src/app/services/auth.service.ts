@@ -94,20 +94,24 @@ export class AuthService implements OnDestroy {
             .subscribe({
                 next: () => {
                     this.messageService.showSuccess('Logged out successfully');
-                    // Ensure navigation happens after state cleanup
-                    this.router.navigate(['/login']).then(() => {
-                        // Optional: Reload the page to ensure clean state
-                        if (this.isBrowser) {
-                            window.location.reload();
-                        }
-                    });
+                    this.navigateToLogin();
                 },
-                error: () => {
-                    this.messageService.showError('Error during logout');
-                    // Still navigate to login even if server logout fails
-                    this.router.navigate(['/login']);
+                error: (error) => {
+                    console.warn('Logout endpoint error:', error);
+                    // Even if the server logout fails, we still want to clear the local state
+                    this.messageService.showSuccess('Logged out successfully');
+                    this.navigateToLogin();
                 }
             });
+    }
+
+    private navigateToLogin(): void {
+        this.router.navigate(['/login']).then(() => {
+            // Optional: Reload the page to ensure clean state
+            if (this.isBrowser) {
+                window.location.reload();
+            }
+        });
     }
 
     private startTokenRefresh(): void {
