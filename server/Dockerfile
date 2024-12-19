@@ -1,13 +1,13 @@
-FROM eclipse-temurin:21-jdk-alpine as builder
-WORKDIR /opt/app
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline -Dmaven.test.skip=true -Dspring.datasource.url=jdbc:postgresql://none
-COPY ./src ./src
-RUN ./mvnw clean install -DskipTests -Dspring.datasource.url=jdbc:postgresql://none
+# Build stage
+FROM maven:3.9.6-eclipse-temurin-21-jammy AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:21-jdk-alpine
-WORKDIR /opt/app
+# Run stage
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-COPY --from=builder /opt/app/target/*.jar /opt/app/*.jar
-ENTRYPOINT ["java","-Dspring.profiles.active=prod", "-jar", "/opt/app/*.jar" ]
+ENTRYPOINT ["java", "-jar", "app.jar"]
