@@ -61,15 +61,7 @@ export class AuthService implements OnDestroy {
     }
 
     register(userData: RegisterRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, userData)
-            .pipe(
-                tap(response => {
-                    if (this.isBrowser) {
-                        localStorage.setItem('currentUser', JSON.stringify(response));
-                    }
-                    this.currentUserSubject.next(response);
-                })
-            );
+        return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, userData);
     }
 
     logout(): void {
@@ -161,6 +153,14 @@ export class AuthService implements OnDestroy {
             map(() => true),
             catchError(() => of(false))
         );
+    }
+
+    checkAuthStatus(): boolean {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            return false;
+        }
+        return this.isLoggedIn();
     }
 
     refreshToken(): Observable<AuthResponse> {

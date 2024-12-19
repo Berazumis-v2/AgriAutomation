@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MessageService } from '../../services/message.service';
+import { MessageService, Message } from '../../services/message.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -8,22 +8,45 @@ import { Subscription } from 'rxjs';
     standalone: true,
     imports: [CommonModule],
     template: `
-        <div *ngIf="message" class="message-container" [ngClass]="message.type">
-            {{ message.text }}
-            <button class="close-btn" (click)="clear()">×</button>
+        <div class="messages-container">
+            <div *ngFor="let message of messages" 
+                 class="message-container" 
+                 [ngClass]="message.type">
+                {{ message.text }}
+                <button class="close-btn" (click)="removeMessage(message.id)">×</button>
+            </div>
         </div>
     `,
     styles: [`
-        .message-container {
+        .messages-container {
             position: fixed;
             top: 20px;
             right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .message-container {
             padding: 1rem;
             border-radius: 4px;
-            z-index: 1000;
             display: flex;
             align-items: center;
             gap: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         .error {
@@ -58,18 +81,19 @@ import { Subscription } from 'rxjs';
             padding: 0;
             margin: 0;
             line-height: 1;
+            margin-left: auto;
         }
     `]
 })
 export class MessageComponent implements OnInit, OnDestroy {
-    message: { text: string; type: string } | null = null;
+    messages: Message[] = [];
     private subscription: Subscription | null = null;
 
     constructor(private messageService: MessageService) {}
 
     ngOnInit() {
-        this.subscription = this.messageService.message$.subscribe(
-            message => this.message = message
+        this.subscription = this.messageService.messages$.subscribe(
+            messages => this.messages = messages
         );
     }
 
@@ -77,7 +101,7 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.subscription?.unsubscribe();
     }
 
-    clear() {
-        this.messageService.clear();
+    removeMessage(id: number) {
+        this.messageService.removeMessage(id);
     }
 } 

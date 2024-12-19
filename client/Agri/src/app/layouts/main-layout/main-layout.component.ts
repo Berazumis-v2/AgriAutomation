@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MessageComponent } from '../../components/shared/message.component';
@@ -28,13 +28,15 @@ import { filter } from 'rxjs/operators';
                 <div class="collapsible-body">
                     <ul class="inline">
                         <li><a routerLink="/plant-care-systems">Plant Care Systems</a></li>
-                        <ng-container *ngIf="checkAuthStatus() === false">
-                            <li><a routerLink="/login">Login</a></li>
-                            <li><a routerLink="/register">Register</a></li>
-                        </ng-container>
-                        <ng-container *ngIf="checkAuthStatus() === true">
-                            <li><a routerLink="/dashboard">Dashboard</a></li>
-                            <li><a href="#" (click)="logout($event)">Logout</a></li>
+                        <ng-container *ngIf="isBrowser">
+                            <ng-container *ngIf="checkAuthStatus() === false">
+                                <li><a routerLink="/login">Login</a></li>
+                                <li><a routerLink="/register">Register</a></li>
+                            </ng-container>
+                            <ng-container *ngIf="checkAuthStatus() === true">
+                                <li><a routerLink="/dashboard">Dashboard</a></li>
+                                <li><a href="#" (click)="logout($event)">Logout</a></li>
+                            </ng-container>
                         </ng-container>
                     </ul>
                 </div>
@@ -70,24 +72,27 @@ import { filter } from 'rxjs/operators';
     `]
 })
 export class MainLayoutComponent {
+    isBrowser: boolean;
+
     constructor(
         private authService: AuthService,
-        private router: Router
+        private router: Router,
+        @Inject(PLATFORM_ID) platformId: Object
     ) {
-        // Listen to route changes to recheck auth status
-        this.router.events.pipe(
-            filter(event => event instanceof NavigationEnd)
-        ).subscribe(() => {
-            this.checkAuthStatus();
-        });
+        this.isBrowser = isPlatformBrowser(platformId);
+
+        // Only subscribe to route changes if in browser
+        if (this.isBrowser) {
+            this.router.events.pipe(
+                filter(event => event instanceof NavigationEnd)
+            ).subscribe(() => {
+                this.authService.checkAuthStatus();
+            });
+        }
     }
 
     checkAuthStatus(): boolean {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-            return false;
-        }
-        return this.authService.isLoggedIn();
+        return this.authService.checkAuthStatus();
     }
 
     logout(event: Event): void {
