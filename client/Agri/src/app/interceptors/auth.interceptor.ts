@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, switchMap, take } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 
 let isRefreshing = false;
@@ -9,6 +9,11 @@ let isRefreshing = false;
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
     
+    // Skip auth header for auth-related endpoints except validate-token
+    if (req.url.includes('/auth/') && !req.url.includes('/auth/validate-token')) {
+        return next(req);
+    }
+
     // Add auth header if available
     const token = authService.getToken();
     if (token) {
@@ -42,13 +47,13 @@ function handle401Error(
         isRefreshing = true;
 
         return authService.handleTokenRefresh().pipe(
+            take(1),
             switchMap((response) => {
                 isRefreshing = false;
                 return next(addToken(request, response.accessToken));
             }),
             catchError((error) => {
                 isRefreshing = false;
-                authService.logout();
                 return throwError(() => error);
             })
         );

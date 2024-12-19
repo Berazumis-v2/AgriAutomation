@@ -125,4 +125,8 @@ public class UserService {
     public void validateRefreshToken(String token) {
         jwtService.validateToken(token);
     }
+
+    public void validateAccessToken(String token) {
+        jwtService.validateToken(token);
+    }
 }

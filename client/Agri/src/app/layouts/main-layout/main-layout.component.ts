@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { MessageComponent } from '../../components/shared/message.component';
 import { FooterComponent } from '../../components/shared/footer.component';
 import { BackgroundComponent } from '../../components/shared/background.component';
+import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-main-layout',
@@ -27,10 +28,14 @@ import { BackgroundComponent } from '../../components/shared/background.componen
                 <div class="collapsible-body">
                     <ul class="inline">
                         <li><a routerLink="/plant-care-systems">Plant Care Systems</a></li>
-                        <li *ngIf="!isLoggedIn"><a routerLink="/login">Login</a></li>
-                        <li *ngIf="!isLoggedIn"><a routerLink="/register">Register</a></li>
-                        <li *ngIf="isLoggedIn"><a routerLink="/dashboard">Dashboard</a></li>
-                        <li *ngIf="isLoggedIn"><a href="#" (click)="logout($event)">Logout</a></li>
+                        <ng-container *ngIf="checkAuthStatus() === false">
+                            <li><a routerLink="/login">Login</a></li>
+                            <li><a routerLink="/register">Register</a></li>
+                        </ng-container>
+                        <ng-container *ngIf="checkAuthStatus() === true">
+                            <li><a routerLink="/dashboard">Dashboard</a></li>
+                            <li><a href="#" (click)="logout($event)">Logout</a></li>
+                        </ng-container>
                     </ul>
                 </div>
             </div>
@@ -65,9 +70,23 @@ import { BackgroundComponent } from '../../components/shared/background.componen
     `]
 })
 export class MainLayoutComponent {
-    constructor(private authService: AuthService) {}
+    constructor(
+        private authService: AuthService,
+        private router: Router
+    ) {
+        // Listen to route changes to recheck auth status
+        this.router.events.pipe(
+            filter(event => event instanceof NavigationEnd)
+        ).subscribe(() => {
+            this.checkAuthStatus();
+        });
+    }
 
-    get isLoggedIn(): boolean {
+    checkAuthStatus(): boolean {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            return false;
+        }
         return this.authService.isLoggedIn();
     }
 

@@ -12,8 +12,8 @@ import { MessageService } from '../services/message.service';
     providedIn: 'root'
 })
 export class AuthService implements OnDestroy {
-    private currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
-    public currentUser$ = this.currentUserSubject.asObservable();
+    private currentUserSubject: BehaviorSubject<AuthResponse | null>;
+    public currentUser$: Observable<AuthResponse | null>;
     private isBrowser: boolean;
     private refreshInterval?: Subscription;
     private readonly REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes in milliseconds
@@ -25,29 +25,22 @@ export class AuthService implements OnDestroy {
         private messageService: MessageService
     ) {
         this.isBrowser = isPlatformBrowser(platformId);
+        
+        // Initialize with stored token if it exists
+        let initialState: AuthResponse | null = null;
         if (this.isBrowser) {
-            // Check for existing token on service initialization
             const savedToken = localStorage.getItem('accessToken');
             if (savedToken) {
-                // Verify token validity with backend
-                this.checkRefreshToken().subscribe({
-                    next: (isValid) => {
-                        if (isValid) {
-                            this.currentUserSubject.next({ accessToken: savedToken, refreshToken: '' });
-                            this.startTokenRefresh();
-                        } else {
-                            // Token is invalid, clear it
-                            localStorage.removeItem('accessToken');
-                            this.currentUserSubject.next(null);
-                        }
-                    },
-                    error: () => {
-                        // On error, clear token
-                        localStorage.removeItem('accessToken');
-                        this.currentUserSubject.next(null);
-                    }
-                });
+                initialState = { accessToken: savedToken, refreshToken: '' };
             }
+        }
+        
+        this.currentUserSubject = new BehaviorSubject<AuthResponse | null>(initialState);
+        this.currentUser$ = this.currentUserSubject.asObservable();
+
+        // Start refresh cycle if we have a token
+        if (initialState) {
+            this.startTokenRefresh();
         }
     }
 
@@ -80,16 +73,8 @@ export class AuthService implements OnDestroy {
     }
 
     logout(): void {
-        // First, stop the refresh interval
-        this.stopTokenRefresh();
-
-        // Clear local storage and user state
-        if (this.isBrowser) {
-            localStorage.removeItem('accessToken');
-        }
-        this.currentUserSubject.next(null);
+        this.clearAuthState();
         
-        // Call logout endpoint to clear refresh token cookie
         this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
             .subscribe({
                 next: () => {
@@ -98,7 +83,6 @@ export class AuthService implements OnDestroy {
                 },
                 error: (error) => {
                     console.warn('Logout endpoint error:', error);
-                    // Even if the server logout fails, we still want to clear the local state
                     this.messageService.showSuccess('Logged out successfully');
                     this.navigateToLogin();
                 }
@@ -107,7 +91,6 @@ export class AuthService implements OnDestroy {
 
     private navigateToLogin(): void {
         this.router.navigate(['/login']).then(() => {
-            // Optional: Reload the page to ensure clean state
             if (this.isBrowser) {
                 window.location.reload();
             }
@@ -115,10 +98,8 @@ export class AuthService implements OnDestroy {
     }
 
     private startTokenRefresh(): void {
-        // Clear any existing interval
         this.stopTokenRefresh();
 
-        // Start new interval
         this.refreshInterval = interval(this.REFRESH_INTERVAL)
             .pipe(
                 switchMap(() => {
@@ -131,7 +112,6 @@ export class AuthService implements OnDestroy {
                     if (this.isBrowser) {
                         localStorage.setItem('accessToken', response.accessToken);
                     }
-                    // Make sure to update the current user state
                     this.currentUserSubject.next(response);
                     this.messageService.showSuccess('Access token refreshed successfully');
                 },
@@ -165,9 +145,18 @@ export class AuthService implements OnDestroy {
     }
 
     checkRefreshToken(): Observable<boolean> {
+        const token = this.getToken();
+        if (!token) {
+            return of(false);
+        }
+        
         return this.http.get<boolean>(
-            `${environment.apiUrl}/auth/check-token`,
-            { withCredentials: true }
+            `${environment.apiUrl}/auth/validate-token`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
         ).pipe(
             map(() => true),
             catchError(() => of(false))
@@ -189,7 +178,6 @@ export class AuthService implements OnDestroy {
         );
     }
 
-    // Add method to handle token refresh from interceptor
     handleTokenRefresh(): Observable<AuthResponse> {
         this.messageService.showInfo('Session expired. Refreshing token...');
         return this.refreshToken().pipe(
@@ -207,5 +195,22 @@ export class AuthService implements OnDestroy {
                 }
             })
         );
+    }
+
+    private handleTokenValidationError(): void {
+        if (this.router.url !== '/login') {
+            this.messageService.showError('Session expired. Please log in again.');
+            this.logout();
+        } else {
+            this.clearAuthState();
+        }
+    }
+
+    private clearAuthState(): void {
+        this.stopTokenRefresh();
+        if (this.isBrowser) {
+            localStorage.removeItem('accessToken');
+        }
+        this.currentUserSubject.next(null);
     }
 }

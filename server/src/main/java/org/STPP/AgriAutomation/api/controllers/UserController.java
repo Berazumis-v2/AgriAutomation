@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -52,20 +53,28 @@ public class UserController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refreshToken") String refreshToken) {
-        AuthResponse authResponse = service.refreshAccessToken(refreshToken);
+    public ResponseEntity<AuthResponse> refreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
-                .httpOnly(true)
-                .secure(false) // Set to false for local development
-                .path("/")    // Changed from /auth to / to make cookie available everywhere
-                .maxAge(3 * 24 * 60 * 60)
-                .sameSite("Lax")  // Changed from Strict to Lax for development
-                .build();
+        try {
+            AuthResponse authResponse = service.refreshAccessToken(refreshToken);
+            
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(3 * 24 * 60 * 60)
+                    .sameSite("Lax")
+                    .build();
 
-        return ResponseEntity.ok()
-                .header("Set-Cookie", cookie.toString())
-                .body(new AuthResponse(authResponse.getAccessToken(), "Cookie set"));
+            return ResponseEntity.ok()
+                    .header("Set-Cookie", cookie.toString())
+                    .body(authResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     @PostMapping("/logout")
@@ -93,11 +102,36 @@ public class UserController {
             try {
                 // Validate the token
                 service.validateRefreshToken(refreshToken);
-                return ResponseEntity.ok(true);
+                // If validation succeeds, refresh the access token
+                AuthResponse authResponse = service.refreshAccessToken(refreshToken);
+                
+                // Create new cookie
+                ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
+                        .httpOnly(true)
+                        .secure(false)
+                        .path("/")
+                        .maxAge(3 * 24 * 60 * 60)
+                        .sameSite("Lax")
+                        .build();
+
+                return ResponseEntity.ok()
+                        .header("Set-Cookie", cookie.toString())
+                        .body(true);
             } catch (Exception e) {
                 return ResponseEntity.ok(false);
             }
         }
         return ResponseEntity.ok(false);
+    }
+
+    @GetMapping("/validate-token")
+    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.substring(7); // Remove "Bearer "
+            service.validateAccessToken(token);
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
     }
 }
