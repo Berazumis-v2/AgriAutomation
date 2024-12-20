@@ -92,7 +92,7 @@ export class MainLayoutComponent {
     }
 
     checkAuthStatus(): boolean {
-        return this.authService.checkAuthStatus();
+        return this.authService.isLoggedIn();
     }
 
     logout(event: Event): void {

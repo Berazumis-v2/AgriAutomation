@@ -139,14 +139,18 @@ export class DashboardComponent implements OnInit {
     }
 
     private checkRefreshToken() {
-        // For HttpOnly cookies, we can't read the value directly
-        // but we can check if it exists by making a request to the server
         this.authService.checkRefreshToken().subscribe({
             next: (isValid) => {
                 this.hasRefreshToken = isValid;
+                if (!isValid) {
+                    this.accessToken = 'No valid session found';
+                    this.showToken = false;
+                }
             },
             error: () => {
                 this.hasRefreshToken = false;
+                this.accessToken = 'Error checking session';
+                this.showToken = false;
             }
         });
     }
@@ -159,6 +163,8 @@ export class DashboardComponent implements OnInit {
             },
             error: () => {
                 this.accessToken = 'Token refresh failed';
+                this.hasRefreshToken = false;
+                this.showToken = false;
             }
         });
     }

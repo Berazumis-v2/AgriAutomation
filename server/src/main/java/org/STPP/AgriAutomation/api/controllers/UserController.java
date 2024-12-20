@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -100,23 +100,9 @@ public class UserController {
     public ResponseEntity<Boolean> checkRefreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
         if (refreshToken != null && !refreshToken.isEmpty()) {
             try {
-                // Validate the token
+                // Only validate the token without refreshing it
                 service.validateRefreshToken(refreshToken);
-                // If validation succeeds, refresh the access token
-                AuthResponse authResponse = service.refreshAccessToken(refreshToken);
-                
-                // Create new cookie
-                ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
-                        .httpOnly(true)
-                        .secure(false)
-                        .path("/")
-                        .maxAge(3 * 24 * 60 * 60)
-                        .sameSite("Lax")
-                        .build();
-
-                return ResponseEntity.ok()
-                        .header("Set-Cookie", cookie.toString())
-                        .body(true);
+                return ResponseEntity.ok(true);
             } catch (Exception e) {
                 return ResponseEntity.ok(false);
             }
