@@ -38,13 +38,14 @@ public class UserController {
     public ResponseEntity<AuthResponse> login(@Validated @RequestBody LoginRequest loginRequest) {
         AuthResponse authResponse = service.login(loginRequest);
 
-        // Create HttpOnly cookie for refresh token
+        // Create HttpOnly cookie for refresh token with proper security settings
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(false) // Set to false for local development
-                .path("/")    // Changed from /auth to / to make cookie available everywhere
-                .maxAge(3 * 24 * 60 * 60) // 3 days in seconds
-                .sameSite("Lax")  // Changed from Strict to Lax for development
+                .secure(true)  // Changed to true for production
+                .path("/")
+                .maxAge(3 * 24 * 60 * 60)
+                .sameSite("Strict")  // Changed to Strict for production
+                .domain(null)  // Let the browser set the appropriate domain
                 .build();
 
         return ResponseEntity.ok()
@@ -63,10 +64,11 @@ public class UserController {
             
             ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(true)  // Changed to true for production
                     .path("/")
                     .maxAge(3 * 24 * 60 * 60)
-                    .sameSite("Lax")
+                    .sameSite("Strict")  // Changed to Strict for production
+                    .domain(null)  // Let the browser set the appropriate domain
                     .build();
 
             return ResponseEntity.ok()
@@ -85,10 +87,11 @@ public class UserController {
         
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)  // Changed to true for production
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite("Strict")  // Changed to Strict for production
+                .domain(null)  // Let the browser set the appropriate domain
                 .build();
 
         return ResponseEntity.ok()
