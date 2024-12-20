@@ -1,0 +1,12 @@
+<div class="container">
+  <h1>AgriAutomation System</h1>
+  
+  <div class="connection-status" [ngClass]="connectionStatus">
+    <p>{{ connectionMessage }}</p>
+    <p *ngIf="connectionStatus === 'error'" class="error-details">
+      {{ errorDetails }}
+    </p>
+  </div>
+
+  <router-outlet></router-outlet>
+</div>

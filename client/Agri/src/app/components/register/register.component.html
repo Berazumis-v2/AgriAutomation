@@ -1,0 +1,36 @@
+<div class="register-container">
+    <h2>Register</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input 
+                type="text" 
+                id="username" 
+                formControlName="username" 
+                class="form-control">
+            <div class="error" *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['required']">
+                Username is required
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+                type="password" 
+                id="password" 
+                formControlName="password" 
+                class="form-control">
+            <div class="error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['required']">
+                Password is required
+            </div>
+            <div class="error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']">
+                Password must be at least 6 characters
+            </div>
+        </div>
+
+        <div class="error" *ngIf="error">{{ error }}</div>
+
+        <button type="submit" [disabled]="!registerForm.valid">Register</button>
+        <p>Already have an account? <a routerLink="/login">Login here</a></p>
+    </form>
+</div> 

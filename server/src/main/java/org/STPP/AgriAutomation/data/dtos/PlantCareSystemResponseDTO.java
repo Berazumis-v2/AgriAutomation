@@ -11,7 +11,7 @@ public class PlantCareSystemResponseDTO {
     private String description;
     private boolean automationEnabled;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime maintenanceTimeStamp;
 
     private UserDTO createdBy;

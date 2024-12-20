@@ -13,6 +13,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Sensor {
@@ -21,10 +26,22 @@ public class Sensor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @NotBlank(message = "Model is required")
+    @Size(min = 2, max = 50, message = "Model must be between 2 and 50 characters")
     private String model;
+
+    @Min(value = -50, message = "Temperature must be at least -50°C")
+    @Max(value = 100, message = "Temperature must not exceed 100°C")
     private int temperature;
+
+    @Min(value = 0, message = "Humidity must be at least 0%")
+    @Max(value = 100, message = "Humidity must not exceed 100%")
     private int humidity;
+
+    @NotNull(message = "Reading timestamp is required")
     private LocalDateTime readingTimestamp;
+
+    @NotNull(message = "Calibration timestamp is required")
     private LocalDateTime calibrationTimestamp;
 
     @ManyToOne
@@ -84,14 +101,17 @@ public class Sensor {
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();
         this.readingTimestamp = now;
-        this.calibrationTimestamp = now;
     }
 
     @PreUpdate
     public void preUpdate() {
         LocalDateTime now = LocalDateTime.now();
         this.readingTimestamp = now;
-        this.calibrationTimestamp = now;
+    }
+
+    // Add setter for calibrationTimestamp
+    public void setCalibrationTimestamp(LocalDateTime calibrationTimestamp) {
+        this.calibrationTimestamp = calibrationTimestamp;
     }
 }
 
