@@ -44,7 +44,7 @@ public class UserController {
                 .secure(true)  // Changed to true for production
                 .path("/")
                 .maxAge(3 * 24 * 60 * 60)
-                .sameSite("Strict")  // Changed to Strict for production
+                .sameSite("None")  // Changed to Strict for production
                 .domain(null)  // Let the browser set the appropriate domain
                 .build();
 
@@ -67,7 +67,7 @@ public class UserController {
                     .secure(true)  // Changed to true for production
                     .path("/")
                     .maxAge(3 * 24 * 60 * 60)
-                    .sameSite("Strict")  // Changed to Strict for production
+                    .sameSite("None")  // Changed to Strict for production
                     .domain(null)  // Let the browser set the appropriate domain
                     .build();
 
@@ -90,7 +90,7 @@ public class UserController {
                 .secure(true)  // Changed to true for production
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")  // Changed to Strict for production
+                .sameSite("None")  // Changed to Strict for production
                 .domain(null)  // Let the browser set the appropriate domain
                 .build();
 
