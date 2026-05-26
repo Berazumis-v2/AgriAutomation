@@ -9,12 +9,6 @@ import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationModalComponent } from '../shared/confirmation-modal.component';
 
-interface SortOption {
-    label: string;
-    value: string;
-    direction: 'asc' | 'desc';
-}
-
 @Component({
     selector: 'app-plant-care-list',
     standalone: true,
@@ -54,16 +48,7 @@ interface SortOption {
                     </button>
                 </div>
             </div>
-
-            <div class="sort-container margin-bottom">
-                <select (change)="onSort($event)" class="sort-select">
-                    <option *ngFor="let option of sortOptions" 
-                            [selected]="option === selectedSort">
-                        {{option.label}}
-                    </option>
-                </select>
-            </div>
-
+            
             <div *ngIf="filteredSystems.length === 0" class="empty-message">
                 <p>No plant care systems found</p>
                 <p *ngIf="searchTerm" class="sub-text">Try adjusting your search term</p>
@@ -302,26 +287,6 @@ interface SortOption {
             }
         }
     }
-
-    .sort-container {
-        max-width: 600px;
-        margin: 0 auto;
-    }
-
-    .sort-select {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid var(--primary);
-        border-radius: 4px;
-        background-color: white;
-        cursor: pointer;
-        
-        &:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
-        }
-    }
     `]
 })
 export class PlantCareListComponent implements OnInit {
@@ -331,17 +296,6 @@ export class PlantCareListComponent implements OnInit {
     searchId: string = '';
     showDeleteModal = false;
     systemToDelete: PlantCareSystem | null = null;
-
-    sortOptions: SortOption[] = [
-        { label: 'ID (Ascending)', value: 'id', direction: 'asc' },
-        { label: 'ID (Descending)', value: 'id', direction: 'desc' },
-        { label: 'Name (A-Z)', value: 'name', direction: 'asc' },
-        { label: 'Name (Z-A)', value: 'name', direction: 'desc' },
-        { label: 'Created By (A-Z)', value: 'createdBy', direction: 'asc' },
-        { label: 'Created By (Z-A)', value: 'createdBy', direction: 'desc' },
-    ];
-    
-    selectedSort: SortOption = this.sortOptions[0];
 
     constructor(
         private plantCareService: PlantCareSystemService,
@@ -426,39 +380,11 @@ export class PlantCareListComponent implements OnInit {
             const idMatch = this.searchId ? system.id === Number(this.searchId) : true;
             return nameMatch && idMatch;
         });
-        this.applySorting();
     }
 
     clearSearch() {
         this.searchTerm = '';
         this.searchId = '';
-        this.filteredSystems = [...this.systems];
-        this.applySorting();
-    }
-
-    onSort(event: Event) {
-        const select = event.target as HTMLSelectElement;
-        this.selectedSort = this.sortOptions[select.selectedIndex];
-        this.applySorting();
-    }
-
-    private applySorting() {
-        this.filteredSystems.sort((a, b) => {
-            let compareResult = 0;
-            
-            switch (this.selectedSort.value) {
-                case 'id':
-                    compareResult = a.id - b.id;
-                    break;
-                case 'name':
-                    compareResult = a.name.localeCompare(b.name);
-                    break;
-                case 'createdBy':
-                    compareResult = a.createdBy.username.localeCompare(b.createdBy.username);
-                    break;
-            }
-            
-            return this.selectedSort.direction === 'asc' ? compareResult : -compareResult;
-        });
+        this.filteredSystems = this.systems;
     }
 } 

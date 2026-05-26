@@ -9,12 +9,6 @@ import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationModalComponent } from '../shared/confirmation-modal.component';
 
-interface SortOption {
-    label: string;
-    value: string;
-    direction: 'asc' | 'desc';
-}
-
 @Component({
     selector: 'app-sensor-list',
     standalone: true,
@@ -53,15 +47,6 @@ interface SortOption {
                         Clear
                     </button>
                 </div>
-            </div>
-
-            <div class="sort-container margin-bottom">
-                <select (change)="onSort($event)" class="sort-select">
-                    <option *ngFor="let option of sortOptions" 
-                            [selected]="option === selectedSort">
-                        {{option.label}}
-                    </option>
-                </select>
             </div>
 
             <div *ngIf="filteredSensors.length === 0" class="empty-message">
@@ -299,26 +284,6 @@ interface SortOption {
             width: 80px;
             text-align: center;
         }
-
-        .sort-container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .sort-select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid var(--primary);
-            border-radius: 4px;
-            background-color: white;
-            cursor: pointer;
-            
-            &:focus {
-                outline: none;
-                border-color: var(--primary);
-                box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
-            }
-        }
     `]
 })
 export class SensorListComponent implements OnInit {
@@ -329,21 +294,6 @@ export class SensorListComponent implements OnInit {
     plantCareSystemId: number;
     showDeleteModal = false;
     sensorToDelete: Sensor | null = null;
-
-    sortOptions: SortOption[] = [
-        { label: 'ID (Ascending)', value: 'id', direction: 'asc' },
-        { label: 'ID (Descending)', value: 'id', direction: 'desc' },
-        { label: 'Model (A-Z)', value: 'model', direction: 'asc' },
-        { label: 'Model (Z-A)', value: 'model', direction: 'desc' },
-        { label: 'Temperature (Low-High)', value: 'temperature', direction: 'asc' },
-        { label: 'Temperature (High-Low)', value: 'temperature', direction: 'desc' },
-        { label: 'Humidity (Low-High)', value: 'humidity', direction: 'asc' },
-        { label: 'Humidity (High-Low)', value: 'humidity', direction: 'desc' },
-        { label: 'Created By (A-Z)', value: 'createdBy', direction: 'asc' },
-        { label: 'Created By (Z-A)', value: 'createdBy', direction: 'desc' },
-    ];
-    
-    selectedSort: SortOption = this.sortOptions[0];
 
     constructor(
         private sensorService: SensorService,
@@ -434,45 +384,11 @@ export class SensorListComponent implements OnInit {
             const idMatch = this.searchId ? sensor.id === Number(this.searchId) : true;
             return modelMatch && idMatch;
         });
-        this.applySorting();
     }
 
     clearSearch() {
         this.searchTerm = '';
         this.searchId = '';
-        this.filteredSensors = [...this.sensors];
-        this.applySorting();
-    }
-
-    onSort(event: Event) {
-        const select = event.target as HTMLSelectElement;
-        this.selectedSort = this.sortOptions[select.selectedIndex];
-        this.applySorting();
-    }
-
-    private applySorting() {
-        this.filteredSensors.sort((a, b) => {
-            let compareResult = 0;
-            
-            switch (this.selectedSort.value) {
-                case 'id':
-                    compareResult = a.id - b.id;
-                    break;
-                case 'model':
-                    compareResult = a.model.localeCompare(b.model);
-                    break;
-                case 'temperature':
-                    compareResult = a.temperature - b.temperature;
-                    break;
-                case 'humidity':
-                    compareResult = a.humidity - b.humidity;
-                    break;
-                case 'createdBy':
-                    compareResult = a.createdBy.username.localeCompare(b.createdBy.username);
-                    break;
-            }
-            
-            return this.selectedSort.direction === 'asc' ? compareResult : -compareResult;
-        });
+        this.filteredSensors = this.sensors;
     }
 } 

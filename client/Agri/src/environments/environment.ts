@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://orca-app-qnpzk.ondigitalocean.app'
+  apiUrl: 'https://agri-automation.onrender.com'
 }; 

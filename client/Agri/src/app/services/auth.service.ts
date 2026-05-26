@@ -1,6 +1,6 @@
 import { Injectable, PLATFORM_ID, Inject, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of, interval, Subscription, EMPTY } from 'rxjs';
+import { Observable, BehaviorSubject, of, interval, Subscription } from 'rxjs';
 import { tap, map, catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { LoginRequest, RegisterRequest, AuthResponse } from '../interfaces/auth.interface';
@@ -16,7 +16,7 @@ export class AuthService implements OnDestroy {
     public currentUser$: Observable<AuthResponse | null>;
     private isBrowser: boolean;
     private refreshInterval?: Subscription;
-    private readonly REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
+    private readonly REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes in milliseconds
 
     constructor(
         private http: HttpClient,
@@ -31,7 +31,7 @@ export class AuthService implements OnDestroy {
         if (this.isBrowser) {
             const savedToken = localStorage.getItem('accessToken');
             if (savedToken) {
-                initialState = { accessToken: savedToken };
+                initialState = { accessToken: savedToken, refreshToken: '' };
             }
         }
         
@@ -44,42 +44,6 @@ export class AuthService implements OnDestroy {
         }
     }
 
-    private startTokenRefresh(): void {
-        this.stopTokenRefresh();
-
-        // Start the regular interval for token refresh
-        this.refreshInterval = interval(this.REFRESH_INTERVAL)
-            .pipe(
-                switchMap(() => this.refreshToken().pipe(
-                    catchError(error => {
-                        console.error('Token refresh failed:', error);
-                        if (error.status === 401) {
-                            this.messageService.showError('Session expired. Please log in again.');
-                            this.logout();
-                        }
-                        return EMPTY;
-                    })
-                ))
-            )
-            .subscribe();
-    }
-
-    refreshToken(): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(
-            `${environment.apiUrl}/auth/refresh-token`,
-            {},
-            { withCredentials: true } // Important for sending the refresh token cookie
-        ).pipe(
-            tap(response => {
-                if (this.isBrowser) {
-                    localStorage.setItem('accessToken', response.accessToken);
-                }
-                this.currentUserSubject.next({ accessToken: response.accessToken });
-                this.messageService.showSuccess('Session refreshed successfully');
-            })
-        );
-    }
-
     login(credentials: LoginRequest): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(
             `${environment.apiUrl}/auth/login`, 
@@ -90,10 +54,14 @@ export class AuthService implements OnDestroy {
                 if (this.isBrowser) {
                     localStorage.setItem('accessToken', response.accessToken);
                 }
-                this.currentUserSubject.next({ accessToken: response.accessToken });
+                this.currentUserSubject.next(response);
                 this.startTokenRefresh();
             })
         );
+    }
+
+    register(userData: RegisterRequest): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, userData);
     }
 
     logout(): void {
@@ -113,16 +81,40 @@ export class AuthService implements OnDestroy {
             });
     }
 
-    register(userData: RegisterRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, userData);
-    }
-
     private navigateToLogin(): void {
         this.router.navigate(['/login']).then(() => {
             if (this.isBrowser) {
                 window.location.reload();
             }
         });
+    }
+
+    private startTokenRefresh(): void {
+        this.stopTokenRefresh();
+
+        this.refreshInterval = interval(this.REFRESH_INTERVAL)
+            .pipe(
+                switchMap(() => {
+                    this.messageService.showInfo('Refreshing access token...');
+                    return this.refreshToken();
+                })
+            )
+            .subscribe({
+                next: (response) => {
+                    if (this.isBrowser) {
+                        localStorage.setItem('accessToken', response.accessToken);
+                    }
+                    this.currentUserSubject.next(response);
+                    this.messageService.showSuccess('Access token refreshed successfully');
+                },
+                error: (error) => {
+                    console.error('Token refresh failed:', error);
+                    this.messageService.showError('Token refresh failed. Please log in again.');
+                    if (error.status === 401) {
+                        this.logout();
+                    }
+                }
+            });
     }
 
     private stopTokenRefresh(): void {
@@ -145,32 +137,56 @@ export class AuthService implements OnDestroy {
     }
 
     checkRefreshToken(): Observable<boolean> {
+        const token = this.getToken();
+        if (!token) {
+            return of(false);
+        }
+        
         return this.http.get<boolean>(
-            `${environment.apiUrl}/auth/check-token`,
-            { withCredentials: true } // Important for sending the cookie
+            `${environment.apiUrl}/auth/validate-token`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
         ).pipe(
+            map(() => true),
             catchError(() => of(false))
         );
     }
 
-    checkAuthStatus(): Observable<boolean> {
-        return this.checkRefreshToken().pipe(
-            tap(hasValidRefreshToken => {
-                if (!hasValidRefreshToken) {
-                    this.clearAuthState();
+    checkAuthStatus(): boolean {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            return false;
+        }
+        return this.isLoggedIn();
+    }
+
+    refreshToken(): Observable<AuthResponse> {
+        return this.http.post<AuthResponse>(
+            `${environment.apiUrl}/auth/refresh-token`,
+            {},
+            { withCredentials: true }
+        ).pipe(
+            tap(response => {
+                if (this.isBrowser) {
+                    localStorage.setItem('accessToken', response.accessToken);
                 }
+                this.currentUserSubject.next(response);
             })
         );
     }
 
     handleTokenRefresh(): Observable<AuthResponse> {
+        this.messageService.showInfo('Session expired. Refreshing token...');
         return this.refreshToken().pipe(
             tap({
                 next: (response) => {
                     if (this.isBrowser) {
                         localStorage.setItem('accessToken', response.accessToken);
                     }
-                    this.currentUserSubject.next({ accessToken: response.accessToken });
+                    this.currentUserSubject.next(response);
                     this.messageService.showSuccess('Session refreshed successfully');
                 },
                 error: (error) => {

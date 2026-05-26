@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,14 +38,13 @@ public class UserController {
     public ResponseEntity<AuthResponse> login(@Validated @RequestBody LoginRequest loginRequest) {
         AuthResponse authResponse = service.login(loginRequest);
 
-        // Create HttpOnly cookie for refresh token with proper security settings
+        // Create HttpOnly cookie for refresh token
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(true)  // Changed to true for production
-                .path("/")
-                .maxAge(3 * 24 * 60 * 60)
-                .sameSite("None")  // Changed to Strict for production
-                .domain(null)  // Let the browser set the appropriate domain
+                .secure(false) // Set to false for local development
+                .path("/")    // Changed from /auth to / to make cookie available everywhere
+                .maxAge(3 * 24 * 60 * 60) // 3 days in seconds
+                .sameSite("Lax")  // Changed from Strict to Lax for development
                 .build();
 
         return ResponseEntity.ok()
@@ -64,11 +63,10 @@ public class UserController {
             
             ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                     .httpOnly(true)
-                    .secure(true)  // Changed to true for production
+                    .secure(false)
                     .path("/")
                     .maxAge(3 * 24 * 60 * 60)
-                    .sameSite("None")  // Changed to Strict for production
-                    .domain(null)  // Let the browser set the appropriate domain
+                    .sameSite("Lax")
                     .build();
 
             return ResponseEntity.ok()
@@ -87,11 +85,10 @@ public class UserController {
         
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)  // Changed to true for production
+                .secure(false)
                 .path("/")
                 .maxAge(0)
-                .sameSite("None")  // Changed to Strict for production
-                .domain(null)  // Let the browser set the appropriate domain
+                .sameSite("Lax")
                 .build();
 
         return ResponseEntity.ok()
@@ -103,9 +100,23 @@ public class UserController {
     public ResponseEntity<Boolean> checkRefreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
         if (refreshToken != null && !refreshToken.isEmpty()) {
             try {
-                // Only validate the token without refreshing it
+                // Validate the token
                 service.validateRefreshToken(refreshToken);
-                return ResponseEntity.ok(true);
+                // If validation succeeds, refresh the access token
+                AuthResponse authResponse = service.refreshAccessToken(refreshToken);
+                
+                // Create new cookie
+                ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
+                        .httpOnly(true)
+                        .secure(false)
+                        .path("/")
+                        .maxAge(3 * 24 * 60 * 60)
+                        .sameSite("Lax")
+                        .build();
+
+                return ResponseEntity.ok()
+                        .header("Set-Cookie", cookie.toString())
+                        .body(true);
             } catch (Exception e) {
                 return ResponseEntity.ok(false);
             }
